@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tis.dbio.hu.HR_HUMANEWNMapper">
+    
+    <!-- 플러그인으로 자동 생성된 소스입니다. -->
+    
+    <!-- 기본 PK SELECT HR_HUMANEWN  -->
+    <select id="selectPK" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPK */
+           CORP_CODE AS corpCode /* 법인코드           */
+         , INST_NUMB AS instNumb /* 등록번호           */
+         , EMPL_NUMB AS emplNumb /* 직원번호           */
+         , EMPL_NAME AS emplName /* 직원명             */
+         , ENTE_YMDD AS enteYmdd /* 입사일             */
+         , REGE_NUMB AS regeNumb /* 주민등록번호       */
+         , SEXX_TYPE AS sexxType /* 성별[공통코드]     */
+         , ENGL_NAME AS englName /* 성명(영문)         */
+         , CHIN_NAME AS chinName /* 성명(한문)         */
+         , SOLA_LUNA AS solaLuna /* 양음구분[공통코드] */
+         , BIRT_YMDD AS birtYmdd /* 생연월일           */
+         , TELE_NUMB AS teleNumb /* 전화번호           */
+         , HAND_NUMB AS handNumb /* 휴대전화번호       */
+         , REMK_DESC AS remkDesc /* 비고               */
+         , INST_EMPL AS instEmpl /* 등록자사번         */
+         , INST_DATE AS instDate /* 등록일시           */
+         , INST_PROG AS instProg /* 등록프로그램ID     */
+         , UPDT_EMPL AS updtEmpl /* 수정자사번         */
+         , UPDT_DATE AS updtDate /* 수정일시           */
+         , UPDT_PROG AS updtProg /* 수정프로그램ID     */
+      FROM HR_HUMANEWN /*  */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </select>
+    
+    <!-- 기본 PK SELECT WITH NOLOCK HR_HUMANEWN  -->
+    <select id="selectListPKNoLock" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPKNoLock */
+           CORP_CODE AS corpCode /* 법인코드           */
+         , INST_NUMB AS instNumb /* 등록번호           */
+         , EMPL_NUMB AS emplNumb /* 직원번호           */
+         , EMPL_NAME AS emplName /* 직원명             */
+         , ENTE_YMDD AS enteYmdd /* 입사일             */
+         , REGE_NUMB AS regeNumb /* 주민등록번호       */
+         , SEXX_TYPE AS sexxType /* 성별[공통코드]     */
+         , ENGL_NAME AS englName /* 성명(영문)         */
+         , CHIN_NAME AS chinName /* 성명(한문)         */
+         , SOLA_LUNA AS solaLuna /* 양음구분[공통코드] */
+         , BIRT_YMDD AS birtYmdd /* 생연월일           */
+         , TELE_NUMB AS teleNumb /* 전화번호           */
+         , HAND_NUMB AS handNumb /* 휴대전화번호       */
+         , REMK_DESC AS remkDesc /* 비고               */
+         , INST_EMPL AS instEmpl /* 등록자사번         */
+         , INST_DATE AS instDate /* 등록일시           */
+         , INST_PROG AS instProg /* 등록프로그램ID     */
+         , UPDT_EMPL AS updtEmpl /* 수정자사번         */
+         , UPDT_DATE AS updtDate /* 수정일시           */
+         , UPDT_PROG AS updtProg /* 수정프로그램ID     */
+      FROM HR_HUMANEWN WITH(NOLOCK) /*  */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </select>    
+    
+    <!-- 기본 PK SELECT WITH UPDLOCK HR_HUMANEWN  -->
+    <select id="selectPKLock" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPKLock */
+           CORP_CODE AS corpCode /* 법인코드           */
+         , INST_NUMB AS instNumb /* 등록번호           */
+         , EMPL_NUMB AS emplNumb /* 직원번호           */
+         , EMPL_NAME AS emplName /* 직원명             */
+         , ENTE_YMDD AS enteYmdd /* 입사일             */
+         , REGE_NUMB AS regeNumb /* 주민등록번호       */
+         , SEXX_TYPE AS sexxType /* 성별[공통코드]     */
+         , ENGL_NAME AS englName /* 성명(영문)         */
+         , CHIN_NAME AS chinName /* 성명(한문)         */
+         , SOLA_LUNA AS solaLuna /* 양음구분[공통코드] */
+         , BIRT_YMDD AS birtYmdd /* 생연월일           */
+         , TELE_NUMB AS teleNumb /* 전화번호           */
+         , HAND_NUMB AS handNumb /* 휴대전화번호       */
+         , REMK_DESC AS remkDesc /* 비고               */
+         , INST_EMPL AS instEmpl /* 등록자사번         */
+         , INST_DATE AS instDate /* 등록일시           */
+         , INST_PROG AS instProg /* 등록프로그램ID     */
+         , UPDT_EMPL AS updtEmpl /* 수정자사번         */
+         , UPDT_DATE AS updtDate /* 수정일시           */
+         , UPDT_PROG AS updtProg /* 수정프로그램ID     */
+      FROM HR_HUMANEWN WITH(UPDLOCK) /*  */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </select>
+
+    <!-- 기본 PK SELECT WITH UPDLOCK HR_HUMANEWN -->
+    <select id="selectPKLock01" resultType="java.lang.String" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPKLock */
+           CORP_CODE AS corpCode /* 법인코드           */
+         , INST_NUMB AS instNumb /* 등록번호           */
+         , EMPL_NUMB AS emplNumb /* 직원번호           */
+         , EMPL_NAME AS emplName /* 직원명             */
+         , ENTE_YMDD AS enteYmdd /* 입사일             */
+         , REGE_NUMB AS regeNumb /* 주민등록번호       */
+         , SEXX_TYPE AS sexxType /* 성별[공통코드]     */
+         , ENGL_NAME AS englName /* 성명(영문)         */
+         , CHIN_NAME AS chinName /* 성명(한문)         */
+         , SOLA_LUNA AS solaLuna /* 양음구분[공통코드] */
+         , BIRT_YMDD AS birtYmdd /* 생연월일           */
+         , TELE_NUMB AS teleNumb /* 전화번호           */
+         , HAND_NUMB AS handNumb /* 휴대전화번호       */
+         , REMK_DESC AS remkDesc /* 비고               */
+         , INST_EMPL AS instEmpl /* 등록자사번         */
+         , INST_DATE AS instDate /* 등록일시           */
+         , INST_PROG AS instProg /* 등록프로그램ID     */
+         , UPDT_EMPL AS updtEmpl /* 수정자사번         */
+         , UPDT_DATE AS updtDate /* 수정일시           */
+         , UPDT_PROG AS updtProg /* 수정프로그램ID     */
+      FROM HR_HUMANEWN WITH(UPDLOCK) /*  */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </select>
+
+    <!-- 기본 INSERT HR_HUMANEWN  -->
+    <insert id="insert" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    INSERT /* tis.dbio.hu.HR_HUMANEWNMapper.insert */
+      INTO HR_HUMANEWN /*  */
+    (
+          CORP_CODE /* 법인코드           */
+        , INST_NUMB /* 등록번호           */
+        , EMPL_NUMB /* 직원번호           */
+        , EMPL_NAME /* 직원명             */
+        , ENTE_YMDD /* 입사일             */
+        , REGE_NUMB /* 주민등록번호       */
+        , SEXX_TYPE /* 성별[공통코드]     */
+        , ENGL_NAME /* 성명(영문)         */
+        , CHIN_NAME /* 성명(한문)         */
+        , SOLA_LUNA /* 양음구분[공통코드] */
+        , BIRT_YMDD /* 생연월일           */
+        , TELE_NUMB /* 전화번호           */
+        , HAND_NUMB /* 휴대전화번호       */
+        , REMK_DESC /* 비고               */
+        , INST_EMPL /* 등록자사번         */
+        , INST_DATE /* 등록일시           */
+        , INST_PROG /* 등록프로그램ID     */
+        , UPDT_EMPL /* 수정자사번         */
+        , UPDT_DATE /* 수정일시           */
+        , UPDT_PROG /* 수정프로그램ID     */
+    )
+    VALUES
+    (
+          #{corpCode} /* 법인코드           */
+        , #{instNumb} /* 등록번호           */
+        , #{emplNumb} /* 직원번호           */
+        , #{emplName} /* 직원명             */
+        , #{enteYmdd} /* 입사일             */
+        , #{regeNumb} /* 주민등록번호       */
+        , #{sexxType} /* 성별[공통코드]     */
+        , #{englName} /* 성명(영문)         */
+        , #{chinName} /* 성명(한문)         */
+        , #{solaLuna} /* 양음구분[공통코드] */
+        , #{birtYmdd} /* 생연월일           */
+        , #{teleNumb} /* 전화번호           */
+        , #{handNumb} /* 휴대전화번호       */
+        , #{remkDesc} /* 비고               */
+        , #{instEmpl} /* 등록자사번         */
+        , #{instDate} /* 등록일시           */
+        , #{instProg} /* 등록프로그램ID     */
+        , #{updtEmpl} /* 수정자사번         */
+        , #{updtDate} /* 수정일시           */
+        , #{updtProg} /* 수정프로그램ID     */
+    )
+    </insert>
+
+    <!-- 기본 PK UPDATE HR_HUMANEWN  -->
+    <update id="updatePK" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    UPDATE /* tis.dbio.hu.HR_HUMANEWNMapper.updatePK */
+           HR_HUMANEWN /*  */
+       SET EMPL_NUMB = #{emplNumb} /* 직원번호           */
+         , EMPL_NAME = #{emplName} /* 직원명             */
+         , ENTE_YMDD = #{enteYmdd} /* 입사일             */
+         , REGE_NUMB = #{regeNumb} /* 주민등록번호       */
+         , SEXX_TYPE = #{sexxType} /* 성별[공통코드]     */
+         , ENGL_NAME = #{englName} /* 성명(영문)         */
+         , CHIN_NAME = #{chinName} /* 성명(한문)         */
+         , SOLA_LUNA = #{solaLuna} /* 양음구분[공통코드] */
+         , BIRT_YMDD = #{birtYmdd} /* 생연월일           */
+         , TELE_NUMB = #{teleNumb} /* 전화번호           */
+         , HAND_NUMB = #{handNumb} /* 휴대전화번호       */
+         , REMK_DESC = #{remkDesc} /* 비고               */
+         , INST_EMPL = #{instEmpl} /* 등록자사번         */
+         , INST_DATE = #{instDate} /* 등록일시           */
+         , INST_PROG = #{instProg} /* 등록프로그램ID     */
+         , UPDT_EMPL = #{updtEmpl} /* 수정자사번         */
+         , UPDT_DATE = #{updtDate} /* 수정일시           */
+         , UPDT_PROG = #{updtProg} /* 수정프로그램ID     */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </update>
+
+    <!-- 기본 PK DELETE HR_HUMANEWN  -->
+    <delete id="deletePK" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    DELETE /* tis.dbio.hu.HR_HUMANEWNMapper.deletePK */
+      FROM HR_HUMANEWN /*  */
+     WHERE 1 = 1
+       AND CORP_CODE = #{corpCode} /* 법인코드           */
+       AND INST_NUMB = #{instNumb} /* 등록번호           */
+    </delete>
+
+</mapper>

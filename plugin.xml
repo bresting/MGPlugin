@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <!-- 커맨드 -->
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+          name="xml to java interface mapper gen"
+          id="mgplugin.commands.XMLToInterface">
+      </command>
+      
+      <command
+          name="query to java vo gen"
+          id="mgplugin.commands.QueryToVo">
+      </command>
+   </extension>
+   
+   <!-- 핸들러 -->
+   <extension
+        point="org.eclipse.ui.handlers">
+      <handler
+          commandId="mgplugin.commands.XMLToInterface"
+          class="mgplugin.handlers.XMLToJavaGenHandler">
+      </handler>
+     
+      <handler
+          commandId="mgplugin.commands.QueryToVo"
+          class="mgplugin.handlers.QueryToVoGenHandler">
+      </handler>
+   </extension>
+   
+   <!-- 바인딩 -->
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="mgplugin.commands.XMLToInterface"
+            contextId="org.eclipse.ui.contexts.window"
+            sequence="M3+1"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+      </key>
+      <key
+            commandId="mgplugin.commands.QueryToVo"
+            contextId="org.eclipse.ui.contexts.window"
+            sequence="M3+1"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
+      </key>
+   </extension>
+   
+   <!-- 메뉴 -->
+   <extension
+         point="org.eclipse.ui.menus">
+         
+        <!--
+        <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+            <command
+                  commandId="mgplugin.commands.XMLToInterface"
+                  label="mapper 인터페이스 생성"
+                  style="push"
+                  icon="icons/sample.png"
+                  tooltip="XML을 기반으로 인터페이스를 생성합니다.">
+                <visibleWhen checkEnabled="true">
+                    <iterate ifEmpty="false" operator="or">
+                        <or>
+                            <adapt type="org.eclipse.core.resources.IResource">
+                                <or>
+                                    <test property="org.eclipse.core.resources.name" value="*.xml"/>
+                                </or>
+                            </adapt>
+                        </or>
+                    </iterate>
+                </visibleWhen>
+            </command>
+        </menuContribution>
+        -->
+        
+        <menuContribution locationURI="popup:org.eclipse.wst.sse.ui.StructuredTextEditor.EditorContext?after=additions">
+            <command
+                  commandId="mgplugin.commands.XMLToInterface"
+                  label="mapper 인터페이스 생성"
+                  style="push"
+                  icon="icons/sample.png"
+                  tooltip="XML을 기반으로 인터페이스를 생성합니다.">
+            </command>
+        </menuContribution>
+        <menuContribution locationURI="popup:org.eclipse.wst.sse.ui.StructuredTextEditor.EditorContext?after=additions">
+            <command
+                  commandId="mgplugin.commands.QueryToVo"
+                  label="쿼리 VO생성"
+                  style="push"
+                  icon="icons/sample.png"
+                  tooltip="쿼리를 기반으로 VO를 생성합니다.">
+            </command>
+        </menuContribution>
+        
+   </extension>
+
+    <!-- 스타트업 -->
+   <extension point="org.eclipse.ui.startup">
+      <startup class="mgplugin.template.TemplateVariablesStartup"/>
+   </extension>
+   
+   <!-- 뷰 -->
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="mgplugin.category.view"
+            name="새마을금고">
+      </category>
+      <view
+            category="mgplugin.category.view"
+            class="mgplugin.views.DBIOGenView"
+            icon="icons/sample.png"
+            id="mgplugin.views.DBIOGenViewId"
+            name="MG 기본 DBIO 생성기"
+            >
+      </view>
+      <!--
+      <view
+            category="mgplugin.category.view"
+            class="mgplugin.views.SimpleView"
+            icon="icons/sample.png"
+            id="mgplugin.views.SimpleView"
+            name="MG 기본 출력뷰">
+      </view>
+      -->
+   </extension>
+
+</plugin>
