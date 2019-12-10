@@ -16,6 +16,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -46,6 +47,8 @@ public class DBIOGenView extends ViewPart {
     public static final String ID = "mgplugin.views.DBIOGenView"; //$NON-NLS-1$
     private Text textDBIO;
     private Label lblConnStatus;
+    public static Text textParameter;
+    public static Text textResult;
     
     public DBIOGenView() {
     }
@@ -58,10 +61,10 @@ public class DBIOGenView extends ViewPart {
     public void createPartControl(Composite parent) {
         
         parent.setLayout(new FormLayout());
-        textDBIO = new Text(parent, SWT.BORDER | SWT.MULTI);
+        textDBIO = new Text(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         FormData fd_textDBIO = new FormData();
+        fd_textDBIO.right = new FormAttachment(0, 260);
         fd_textDBIO.left = new FormAttachment(0, 10);
-        fd_textDBIO.right = new FormAttachment(100, -10);
         textDBIO.setLayoutData(fd_textDBIO);
         
         Button btnCreateDBIO = new Button(parent, SWT.NONE);
@@ -99,7 +102,7 @@ public class DBIOGenView extends ViewPart {
                      */
                     for (SourceTemplate sourceTemplate : resultVoList) {
                         String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
-                        srcPath       += "\\" + Activator.getProperty("project.name"      );                               // 프로젝트명
+                        srcPath       += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
                         srcPath       += "\\" + Activator.getProperty("project.sourcePath");
                         srcPath       += "\\" + sourceTemplate.getPackageName().replace(".", "\\");
                         
@@ -114,7 +117,7 @@ public class DBIOGenView extends ViewPart {
                         
                         try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
                             output.write(sourceTemplate.getSource());
-                            Activator.console(targetFile.getAbsolutePath() + "생성...");
+                            Activator.console(targetFile.getAbsolutePath() + " 생성...");
                         } catch (Exception e1) {
                             Activator.console(e1.toString());
                             e1.printStackTrace();
@@ -125,8 +128,8 @@ public class DBIOGenView extends ViewPart {
                      * Mapper.xml & Mapper.java 생성
                      */
                     for (SourceTemplate sourceTemplate : resultMapperList) {
-                        // tis.xxx.xxx -> mapper.xxx.xxx
-                        String mapperPath = sourceTemplate.getPackageName().replace(Activator.getProperty("project.rootPackage") + ".", "mapper.").replace(".", "\\");
+                        // tis.xxx.xxx -> mybatis\xxx\xxx
+                        String mapperPath = sourceTemplate.getPackageName().replace(Activator.getProperty("project.rootPackage") + ".", "mybatis.").replace(".", "\\");
                         
                         String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
                         srcPath       += "\\" + Activator.getProperty("project.name"        );                               // 프로젝트명
@@ -145,7 +148,7 @@ public class DBIOGenView extends ViewPart {
                         try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
                             output.write(sourceTemplate.getSource());
                             
-                            Activator.console(targetFile.getAbsolutePath() + "생성...");
+                            Activator.console(targetFile.getAbsolutePath() + " 생성...");
                         } catch (Exception e1) {
                             Activator.console(e1.toString());
                             e1.printStackTrace();
@@ -171,7 +174,7 @@ public class DBIOGenView extends ViewPart {
                         
                         try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
                             output.write(interfaceSourceTemplate.getSource());
-                            Activator.console(targetFile.getAbsolutePath() + "생성...");
+                            Activator.console(targetFile.getAbsolutePath() + " 생성...");
                         } catch (Exception e1) {
                             Activator.console(e1.toString());
                             e1.printStackTrace();
@@ -197,6 +200,27 @@ public class DBIOGenView extends ViewPart {
         fd_lblConnStatus.top = new FormAttachment(0, 10);
         lblConnStatus.setLayoutData(fd_lblConnStatus);
         lblConnStatus.setText("DB...");
+        
+        Label label = new Label(parent, SWT.NONE);
+        FormData fd_label = new FormData();
+        fd_label.top = new FormAttachment(lblConnStatus, 6);
+        fd_label.left = new FormAttachment(0, 10);
+        label.setLayoutData(fd_label);
+        
+        Composite composite = new Composite(parent, SWT.NONE);
+        FillLayout fl_composite = new FillLayout(SWT.HORIZONTAL);
+        fl_composite.spacing = 10;
+        composite.setLayout(fl_composite);
+        FormData fd_composite = new FormData();
+        fd_composite.right = new FormAttachment(100, -10);
+        fd_composite.left = new FormAttachment(textDBIO, 6);
+        fd_composite.bottom = new FormAttachment(100, -41);
+        fd_composite.top = new FormAttachment(0, 31);
+        composite.setLayoutData(fd_composite);
+        
+        textParameter = new Text(composite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+        
+        textResult = new Text(composite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         
         createActions();
         initializeToolBar();

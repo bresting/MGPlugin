@@ -1,6 +1,7 @@
 package mgplugin.generator;
 
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -8,12 +9,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,6 +32,7 @@ import mgplugin.generator.entity.FieldTemplate;
 import mgplugin.generator.entity.MethodTemplate;
 import mgplugin.generator.entity.SourceTemplate;
 import mgplugin.generator.entity.TableValue;
+import mgplugin.generator.entity.XMLQuery;
 
 /**
  * <pre>
@@ -41,14 +50,287 @@ public class SourceGenerator {
 
     // private static final SimpleDateFormat format1 = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
     
+    
+    public static void main(String[] args) {
+        
+        
+        Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
+        
+        //SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml");
+        //System.out.println(temp.getSource());
+        
+        //XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml", 2000);
+
+        XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1010Mapper.xml", 100);
+        SourceTemplate inSourceTemplate = new SourceTemplate();
+        SourceTemplate outSourceTemplate = new SourceTemplate();
+        getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
+        
+        
+        System.out.println(inSourceTemplate.getSource());
+        System.out.println("=========================");
+        System.out.println(outSourceTemplate.getSource());
+        
+        Activator.closeThisPlugin();
+        
+    }
+    
+    public static void getQueryVoFields(XMLQuery query, SourceTemplate inSourceTemplate, SourceTemplate outSourceTemplate) {
+        
+        List<String> inList  = getInputFields (query.getQuery());
+        List<String> outList = getOutputFields(query.getQuery());
+        
+        if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") )  // 입력
+          || query.getResultType   ().startsWith( Activator.getProperty("project.rootPackage") )  // 결과
+        ) {
+            if ( query.getParameterType().equals(query.getResultType()) ) {
+                
+                for (String tmp : outList) {
+                    if (!inList.contains(tmp)) {
+                        inList.add(tmp);
+                    }
+                }
+                
+                /**
+                 * 입력 & 결과
+                 */
+                List<FieldTemplate> result = getMetaInfo(inList);
+                
+                Map<String, Object> root = new HashMap<String, Object>();
+                root.put("xmlFile"    , query.getFileName     ());
+                root.put("queryId"    , query.getQueryId      ());
+                root.put("packageName", query.getParameterType());
+                root.put("typeName"   , query.getParameterType().substring(query.getParameterType().lastIndexOf(".") + 1));
+                root.put("fieldItems", result);
+                
+                String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
+                
+                inSourceTemplate.setSource(tmplSourceVo);
+                outSourceTemplate.setSource("입출력 같다.");
+                
+            } else {
+
+                if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
+                    /**
+                     * 입력
+                     */
+                    List<FieldTemplate> result = getMetaInfo(outList);
+                    
+                    Map<String, Object> root = new HashMap<String, Object>();
+                    root.put("xmlFile"    , query.getFileName     ());
+                    root.put("queryId"    , query.getQueryId      ());
+                    root.put("packageName", query.getParameterType());
+                    root.put("typeName"   , query.getParameterType().substring(query.getParameterType().lastIndexOf(".") + 1));
+                    root.put("fieldItems" , result);
+                    
+                    String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
+                    
+                    inSourceTemplate.setSource(tmplSourceVo);
+                }
+                
+                if ( query.getResultType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
+                    /**
+                     * 결과
+                     */
+                    List<FieldTemplate> result = getMetaInfo(inList);
+                    
+                    Map<String, Object> root = new HashMap<String, Object>();
+                    root.put("xmlFile"    , query.getFileName     ());
+                    root.put("queryId"    , query.getQueryId      ());
+                    root.put("packageName", query.getResultType());
+                    root.put("typeName"   , query.getResultType().substring(query.getResultType().lastIndexOf(".") + 1));
+                    root.put("fieldItems" , result);
+                    
+                    String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
+                    
+                    outSourceTemplate.setSource(tmplSourceVo);
+                }
+            }
+        } else {
+            Activator.console("입력/결과 프로젝트 유형이 아님");
+        }
+    }
+    
+    
+    public static XMLQuery getQueryAtOffset(String filePath, int offset) {
+        
+        XMLInputFactory factory  = XMLInputFactory.newInstance();
+        List<String>    textList = null;
+        
+        XMLQuery xmlQuery = new XMLQuery();
+        
+        // XML 파일명
+        xmlQuery.setFileName(filePath.substring(filePath.lastIndexOf("\\") + 1));
+        
+        XMLStreamReader streamReader = null;
+        try {
+            streamReader = factory.createXMLStreamReader(new FileReader(filePath));
+            String queryId       = "";
+            String resultType    = "";
+            String parameterType = "";
+            while (streamReader.hasNext()) {
+                int evt = streamReader.next();
+                
+                // 시작점
+                if (streamReader.getEventType() == XMLStreamReader.START_ELEMENT ) {
+                    if ( "select".equals( streamReader.getName().toString())
+                      || "insert".equals( streamReader.getName().toString())
+                      || "update".equals( streamReader.getName().toString())
+                      || "delete".equals( streamReader.getName().toString())
+                    ) {
+                        queryId       = streamReader.getAttributeValue(null, "id"           );
+                        resultType    = streamReader.getAttributeValue(null, "resultType"   );
+                        parameterType = streamReader.getAttributeValue(null, "parameterType");
+                        
+                        textList = new ArrayList<String>();
+                    }
+                }
+                
+                if (textList != null) {
+                    if ( evt == XMLEvent.CHARACTERS) {
+                        textList.add(streamReader.getText());
+                    }
+                }
+                
+                if (streamReader.getEventType() == XMLStreamReader.END_ELEMENT ) {
+                    if ( "select".equals( streamReader.getName().toString())
+                      || "insert".equals( streamReader.getName().toString())
+                      || "update".equals( streamReader.getName().toString())
+                      || "delete".equals( streamReader.getName().toString())
+                    ) {
+                        Location location = streamReader.getLocation();
+                        if ( offset < location.getCharacterOffset() ) {
+                            xmlQuery.setQueryId      (queryId      );
+                            xmlQuery.setResultType   (resultType   );
+                            xmlQuery.setParameterType(parameterType);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            Activator.console(e);
+        } finally {
+            if ( streamReader != null ) {
+                try {
+                    streamReader.close();
+                } catch (XMLStreamException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        xmlQuery.setQuery(String.join("", textList));
+        return xmlQuery;
+    }
+    
+    /**
+     * XML QUERY -> VO
+     */
+    public static Pattern PAT_LINE_COMMENT = Pattern.compile("--.*");
+    public static Pattern PAT_SELECT       = Pattern.compile("SELECT(.*?)(FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PAT_COLUMN       = Pattern.compile("(\\w+)(\\s*)(,|$)"  , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PAR_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{([\\w_]+).*?\\}");
+    
+    /**
+     * 파라미터
+     * 
+     * @param query
+     * @return
+     */
+    public static List<String> getInputFields(String query) {
+        Matcher mat = PAR_BIND_COLUMN.matcher(query);
+        List<String> columnList = new ArrayList<String>();
+        while(mat.find()) {
+            String bindStr = mat.group(2);
+            if (!columnList.contains(bindStr)) {
+                 columnList.add(mat.group(2));
+            }
+        }
+        return columnList;
+    }
+    
+    public static List<String> getOutputFields(String query) {
+        
+        // 라인주석 제거
+        Matcher lineMatcher = PAT_LINE_COMMENT.matcher(query);
+        StringBuffer sbReplace = new StringBuffer();
+        while(lineMatcher.find()) {
+            lineMatcher.appendReplacement(sbReplace, "");
+        }
+        lineMatcher.appendTail(sbReplace);
+        
+        // 블럭주석 & 괄호 제거
+        Stack<Integer> stkMultiComment   = new Stack<Integer>();
+        Stack<Integer> stkBracketComment = new Stack<Integer>();
+        
+        char[] arrQuery = query.toCharArray();
+        try {
+            for (int idx = 0; idx < arrQuery.length; idx++) {
+                // 주석
+                if ( arrQuery[idx] == '/' && arrQuery[idx + 1] == '*') {
+                    stkMultiComment.push(idx);
+                    idx++;
+                } else if ( arrQuery[idx] == '*' && arrQuery[idx + 1] == '/') {
+                    int rtn = stkMultiComment.pop();
+                    for ( int x = rtn; x < (idx + 2); x++ ) {
+                        arrQuery[x] = ' ';
+                    }
+                    idx++;
+                }
+                
+                // 괄호
+                if ( arrQuery[idx] == '(') {
+                    stkBracketComment.push(idx);
+                } else if ( arrQuery[idx] == ')') {
+                    int rtn = stkBracketComment.pop();
+                    // 중복 괄호인 경우 한번에 처리
+                    if (stkBracketComment.isEmpty()) {
+                        for ( int x = rtn; x <= idx; x++ ) {
+                            arrQuery[x] = ' ';
+                        }
+                    }
+                }
+            }
+        } catch ( ArrayIndexOutOfBoundsException | EmptyStackException e) {
+            Activator.console("주석 또는 괄호, 시작, 종료가 맞지 않습니다. - " + e.toString());
+        }
+        
+        List<String> columnList = new ArrayList<String>();
+        
+        // SELECT ... FROM 또는 SELECT 문장종료
+        Matcher selectMatcher = PAT_SELECT.matcher(String.valueOf(arrQuery));
+        if (selectMatcher.find()) {
+            Matcher columnMatcher = PAT_COLUMN.matcher(selectMatcher.group(1));
+            while (columnMatcher.find()) {
+                String column = columnMatcher.group(1);
+                if (columnList.contains(column)) {
+                    Activator.console("SELECT [" + column + "] 중복컬럼이 존재합니다.");
+                }
+                
+                columnList.add(columnMatcher.group(1));
+            }
+        }
+        
+        return columnList;
+    }
+    
+    /**
+     * xml mapper TO java interface
+     * 
+     * @param filePath
+     * @return
+     */
     public static SourceTemplate mapperToInterface(String filePath) {
         
         XMLInputFactory      factory            = XMLInputFactory.newInstance();
         SourceTemplate       sourceTemplate     = new SourceTemplate();
         List<MethodTemplate> methodTemplateList = new ArrayList<>();
         
+        XMLStreamReader streamReader = null;
         try {
-            XMLStreamReader streamReader = factory.createXMLStreamReader(
+            streamReader = factory.createXMLStreamReader(
                     new InputStreamReader( new FileInputStream( filePath ), Charset.forName( "UTF8" ) )
             );
             
@@ -134,6 +416,14 @@ public class SourceGenerator {
         } catch (Exception e) {
             e.printStackTrace();
             Activator.console(e.toString());
+        } finally {
+            if (streamReader != null) {
+                try {
+                    streamReader.close();
+                } catch (XMLStreamException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         
         return sourceTemplate;
@@ -147,6 +437,92 @@ public class SourceGenerator {
         }
         return "";
     }
+    
+    
+    public static List<FieldTemplate> getMetaInfo(List<String> columnList) {
+        
+        List<FieldTemplate> resultList = new ArrayList<>();
+        
+        for (String column : columnList ) {
+            
+            List<String> queryList = new ArrayList<>();
+            queryList.add("SELECT A.TERMS_PHYCS_NAME                      ");
+            queryList.add("     , A.TERMS_LOGIC_NAME                      ");
+            queryList.add("     , B.DOMAIN_NAME                           ");
+            queryList.add("     , B.DOMAIN_DATA_TYPE                      ");
+            queryList.add("     , B.DOMAIN_DATA_SIZE                      ");
+            queryList.add("     , B.DOMAIN_DATA_SCALE                     ");
+            queryList.add("  FROM TERMS_DIC  A                            ");
+            queryList.add("  JOIN DOMAIN_DIC B                            ");
+            queryList.add("    ON A.DOMAIN_NAME      = B.DOMAIN_NAME      ");
+            queryList.add(" WHERE A.TERMS_PHYCS_NAME = ':TERMS_PHYCS_NAME'");  // // 바인딩
+            
+            String query = String.join("\n", queryList);
+            
+            try (Statement stmt = Activator.getConnection().createStatement();) {
+                
+                String srchColumn = column.trim();
+                srchColumn        = srchColumn.replaceAll("\\d+$", "");  // 숫자로 끝나는 경우 제거
+                srchColumn        = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, srchColumn);  // corpCode -> CORP_CODE
+                
+                String exeQuery = query.replace(":TERMS_PHYCS_NAME", srchColumn);
+                
+                ResultSet rs = stmt.executeQuery(exeQuery);
+                
+                FieldTemplate fieldTemplate = new FieldTemplate();
+                TableValue tableValue = new TableValue();
+                if (rs.next()) {
+                    tableValue.COLUMN_NAME        = rs.getString("TERMS_PHYCS_NAME" );
+                    tableValue.COLUMN_DESCRIPTION = rs.getString("TERMS_LOGIC_NAME" );
+                    tableValue.TYPE               = rs.getString("DOMAIN_DATA_TYPE" );
+                    tableValue.LENGTH             = rs.getString("DOMAIN_DATA_SIZE" );
+                    tableValue.SCALE              = rs.getString("DOMAIN_DATA_SCALE");
+                } else {
+                    column = column + "???";
+                    tableValue.COLUMN_DESCRIPTION = "미 등록 용어입니다.";
+                }
+                
+                fieldTemplate.setName     (column                                                    );  // 물리명
+                fieldTemplate.setNameUpper(CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, column) );
+                fieldTemplate.setComment  (tableValue.COLUMN_DESCRIPTION                             );  // 논리명
+                fieldTemplate.setType     (getJavaType(tableValue)                                   );  // 타입
+                fieldTemplate.setNexaType (getNexaType(tableValue                                  ) );  // 타입
+                
+                resultList.add(fieldTemplate);
+                
+            } catch (SQLException e) {
+                e.printStackTrace();
+                Activator.console(e.toString());
+            }
+        }
+        
+        int maxTypeSpace    = 0;
+        int maxNameSpace    = 0;
+        for(FieldTemplate template : resultList) {
+            int tmpTypeSpace = template.getType().length();
+            int tmpNameSpace = template.getName().length();
+
+            if (maxTypeSpace < tmpTypeSpace) {
+                maxTypeSpace = tmpTypeSpace;
+            }
+            
+            if (maxNameSpace < tmpNameSpace) {
+                maxNameSpace = tmpNameSpace;
+            }
+        }
+        
+        for(FieldTemplate template : resultList) {
+            
+            int tmpTypeSpace = template.getType().length();
+            int tmpNameSpace = template.getName().length();
+            
+            template.setTypeSpace(makeSpace(maxTypeSpace - tmpTypeSpace      ));  // 타입
+            template.setNameSpace(makeSpace(maxNameSpace - tmpNameSpace      ));  // 필드명
+        }
+        
+        return resultList;
+    }
+    
     
     public static void createDefaultDBIO(List<String> tableList, List<SourceTemplate> voList, List<SourceTemplate> mapperList) {
      // https://mirwebma.tistory.com/181
@@ -223,7 +599,6 @@ public class SourceGenerator {
                     tableValue.JAVA_NAME       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
                     tableValue.JAVA_NAME_UPPER = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, tableValue.COLUMN_NAME);
                     
-                    // 넥사
                     tableValueList.add(tableValue);
                 }
                 
@@ -391,18 +766,10 @@ public class SourceGenerator {
         case "numeric":
             
             if ( table.SCALE == "0" ) {
-                returnType = "java.lang.Long";
+                returnType = "Long";
             } else {
                 returnType = "java.math.BigDecimal";
             }
-            break;
-
-        case "bigint":
-            returnType = "long";
-            break;
-            
-        case "integer":
-            returnType = "int";
             break;
             
         default:
@@ -419,27 +786,13 @@ public class SourceGenerator {
         switch (table.TYPE.toLowerCase()) {
         case "decimal":
         case "numeric":
-            
             returnType = "BIGDECIMAL";
             break;
-            
         default:
             returnType = "STRING";
             break;
         }
         
         return returnType;
-    }
-    
-    
-    public static void main(String[] args) {
-        
-        Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
-        
-        SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml");
-        System.out.println(temp.getSource());
-        
-        Activator.closeThisPlugin();
-
     }
 }

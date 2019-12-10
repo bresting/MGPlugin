@@ -67,6 +67,7 @@ public class Activator extends AbstractUIPlugin {
     public static Connection getConnection() {
         try {
             if ( CONNECTION == null || CONNECTION.isClosed() ) {
+                console("Connection db...");
                 CONNECTION = DriverManager.getConnection(PLUGIN_PROP.getProperty("db.connection"));
             }
             return CONNECTION;
@@ -90,24 +91,26 @@ public class Activator extends AbstractUIPlugin {
         
         TEMPLAT_CONFIG = new Configuration(Configuration.VERSION_2_3_29);
         
-        Activator.console("MgPlugin started...");
+        Activator.console("MgPlugin start...");
         try (InputStream input = new FileInputStream(configPath + "\\config.properties") ) {
             PLUGIN_PROP.load(input);
-            System.out.println("Properties init...");
-            System.out.println(PLUGIN_PROP);
+            
+            Activator.console("Properties loaded...");
         } catch (IOException e) {
             Activator.console(e.toString());
             e.printStackTrace();
         }
         
         try {
-            System.out.println("Template init...");
             TEMPLAT_CONFIG.setDirectoryForTemplateLoading(new File(configPath + "\\templates"));
             TEMPLAT_CONFIG.setDefaultEncoding("UTF-8");
             TEMPLAT_CONFIG.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
             TEMPLAT_CONFIG.setLogTemplateExceptions(false);
             TEMPLAT_CONFIG.setWrapUncheckedExceptions(true);
             TEMPLAT_CONFIG.setFallbackOnNullLoopVariable(false);
+            
+            Activator.console("Template loaded...");
+            
         } catch (IOException e) {
             Activator.console(e.toString());
             e.printStackTrace();
@@ -115,7 +118,6 @@ public class Activator extends AbstractUIPlugin {
     }
     
     public static void closeThisPlugin() {
-        Activator.console("MgPlugin ended...");
         if (CONNECTION != null) {
             try {
                 CONNECTION.close();
@@ -123,6 +125,7 @@ public class Activator extends AbstractUIPlugin {
                 e.printStackTrace();
             }
         }
+        Activator.console("MgPlugin ended...");
     }
     
     public static String getProperty(String key) {

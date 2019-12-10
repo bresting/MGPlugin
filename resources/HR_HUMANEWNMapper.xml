@@ -5,7 +5,7 @@
     <!-- 플러그인으로 자동 생성된 소스입니다. -->
     
     <!-- 기본 PK SELECT HR_HUMANEWN  -->
-    <select id="selectPK" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
+    <select id="selectListPK" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
     SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPK */
            CORP_CODE AS corpCode /* 법인코드           */
          , INST_NUMB AS instNumb /* 등록번호           */

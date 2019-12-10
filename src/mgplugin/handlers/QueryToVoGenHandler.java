@@ -1,12 +1,5 @@
 package mgplugin.handlers;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -19,6 +12,10 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.part.EditorPart;
 
 import mgplugin.Activator;
+import mgplugin.generator.SourceGenerator;
+import mgplugin.generator.entity.SourceTemplate;
+import mgplugin.generator.entity.XMLQuery;
+import mgplugin.views.DBIOGenView;
 
 /**
  * <pre>
@@ -44,14 +41,7 @@ public class QueryToVoGenHandler extends AbstractHandler {
         if ( editorPart instanceof EditorPart ) {
             
             IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
-            
-            XMLInputFactory factory      = XMLInputFactory.newInstance();
-            XMLStreamReader streamReader = null;
-            try {
-                streamReader = factory.createXMLStreamReader(new FileReader(file.getRawLocation().toOSString()));
-            } catch (FileNotFoundException | XMLStreamException e) {
-                Activator.console(e);
-            }
+
             
             IEditorSite iEditorSite = editorPart.getEditorSite();
             
@@ -63,20 +53,19 @@ public class QueryToVoGenHandler extends AbstractHandler {
                     ISelection iSelection = selectionProvider.getSelection();
                     
                     int offset = ((ITextSelection) iSelection).getOffset();
-                    Activator.console("offset : " + offset + " - TODO 쿼리문 추출해야됨");
-                }
-                
-            }
-            
-            if (streamReader != null) {
-                try {
-                    streamReader.close();
-                } catch (XMLStreamException e) {
-                    Activator.console(e);
+                    
+                    XMLQuery query = SourceGenerator.getQueryAtOffset(file.getRawLocation().toOSString(), offset);
+                    
+                    SourceTemplate inSourceTemplate  = new SourceTemplate();
+                    SourceTemplate outSourceTemplate = new SourceTemplate();
+                    
+                    SourceGenerator.getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
+                    
+                    DBIOGenView.textParameter.setText( inSourceTemplate.getSource()  );
+                    DBIOGenView.textResult.setText   ( outSourceTemplate.getSource() );
                 }
             }
         }
-        
         return null;
     }
 

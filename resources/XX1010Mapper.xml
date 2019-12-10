@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tis.biz.xx.mapper.XX1010Mapper">
+
+    <!-- 일자기본 월별조회 -->
+    <select id="selectList" resultType="tis.biz.xx.vo.XX1010DateInfo" parameterType="tis.biz.xx.vo.XX1010DateInfo">
+    SELECT /* tis.biz.xx.mapper.XX1010Mapper.selectList */
+           STDR_DATE     AS stdrDate    /* 기준일자   */
+         , SALS_DD_YN    AS salsDdYn    /* 영업일여부 */
+         , INT_RT        AS intRt3       /* 이자율     */
+         , INT_RT        AS intRt3       /* 이자율     */
+         , INT_RT        AS intRt2       /* 이자율     */
+         , TRAN_AMT      AS tranAmt     /* 거래금액   */
+      FROM TB_XX002M /* 일자기본 */
+     WHERE 1 = 1
+       AND STDR_DATE   LIKE CONCAT(#{stdrYm},'__')    /* 기준일자 - 기준년월 */
+       AND STDR_DATE   LIKE CONCAT(#{stdrYm3},'__')    /* 기준일자 - 기준년월 */
+     ORDER BY STDR_DATE
+    </select>
+
+</mapper>

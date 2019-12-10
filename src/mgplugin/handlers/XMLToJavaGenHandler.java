@@ -70,7 +70,7 @@ public class XMLToJavaGenHandler extends AbstractHandler {
             
             try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
                 output.write(sourceTemplate.getSource());
-                Activator.console(targetFile.getAbsolutePath() + "생성...");
+                Activator.console(targetFile.getAbsolutePath() + " 생성...");
             } catch (Exception e1) {
                 e1.printStackTrace();
                 Activator.console(e1.toString());

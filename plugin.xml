@@ -41,7 +41,7 @@
       <key
             commandId="mgplugin.commands.QueryToVo"
             contextId="org.eclipse.ui.contexts.window"
-            sequence="M3+1"
+            sequence="M3+2"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>
    </extension>
@@ -72,16 +72,7 @@
             </command>
         </menuContribution>
         -->
-        
-        <menuContribution locationURI="popup:org.eclipse.wst.sse.ui.StructuredTextEditor.EditorContext?after=additions">
-            <command
-                  commandId="mgplugin.commands.XMLToInterface"
-                  label="mapper 인터페이스 생성"
-                  style="push"
-                  icon="icons/sample.png"
-                  tooltip="XML을 기반으로 인터페이스를 생성합니다.">
-            </command>
-        </menuContribution>
+
         <menuContribution locationURI="popup:org.eclipse.wst.sse.ui.StructuredTextEditor.EditorContext?after=additions">
             <command
                   commandId="mgplugin.commands.QueryToVo"
@@ -92,6 +83,15 @@
             </command>
         </menuContribution>
         
+        <menuContribution locationURI="popup:org.eclipse.wst.sse.ui.StructuredTextEditor.EditorContext?after=additions">
+            <command
+                  commandId="mgplugin.commands.XMLToInterface"
+                  label="mapper 인터페이스 생성"
+                  style="push"
+                  icon="icons/sample.png"
+                  tooltip="XML을 기반으로 인터페이스를 생성합니다.">
+            </command>
+        </menuContribution>
    </extension>
 
     <!-- 스타트업 -->

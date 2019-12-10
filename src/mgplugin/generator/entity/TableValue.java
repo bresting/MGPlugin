@@ -26,11 +26,8 @@ public class TableValue {
     public String COLLATION_NAME     = "";
     public String IS_PRIMARYKEY      = "0";
     
-    
     public String JAVA_TYPE          = "";
     public String JAVA_NAME          = "";
     public String JAVA_NAME_UPPER    = "";
-    
-
     
 }

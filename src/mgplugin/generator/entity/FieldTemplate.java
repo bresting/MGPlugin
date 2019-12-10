@@ -26,14 +26,14 @@ public class FieldTemplate {
     private String nexaType;
     private String nexaSize;
 
-    private String typeSpace       = "";
-    private String nameSpace       = "";
-    private String columnNameSpace = "";
-    private String commentSpace    = "";
+    private String typeSpace       = " ";
+    private String nameSpace       = " ";
+    private String columnNameSpace = " ";
+    private String commentSpace    = " ";
     
-    private String pkNameSpace       = "";
-    private String pkColumnNameSpace = "";
-    private String pkCommentSpace    = "";
+    private String pkNameSpace       = " ";
+    private String pkColumnNameSpace = " ";
+    private String pkCommentSpace    = " ";
     
     /**
      * @return the name
@@ -227,6 +227,20 @@ public class FieldTemplate {
     public void setNexaSize(String nexaSize) {
         this.nexaSize = nexaSize;
     }
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "FieldTemplate [name=" + name + ", type=" + type + ", nameUpper=" + nameUpper + ", columnName="
+                + columnName + ", bindName=" + bindName + ", comment=" + comment + ", pk=" + pk + ", nexaType="
+                + nexaType + ", nexaSize=" + nexaSize + ", typeSpace=" + typeSpace + ", nameSpace=" + nameSpace
+                + ", columnNameSpace=" + columnNameSpace + ", commentSpace=" + commentSpace + ", pkNameSpace="
+                + pkNameSpace + ", pkColumnNameSpace=" + pkColumnNameSpace + ", pkCommentSpace=" + pkCommentSpace + "]";
+    }
+    
+    
+    
     
     
     
