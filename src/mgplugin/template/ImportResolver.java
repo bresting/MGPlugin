@@ -24,20 +24,20 @@ public class ImportResolver extends TemplateVariableResolver {
         List<String> textList     = new ArrayList<String>();
         
         if ( package_name.contains("controller") ) {
-        	textList.add("");
-        	textList.add("");
-        	textList.add("import org.slf4j.Logger;");
-        	textList.add("import org.slf4j.LoggerFactory;");
-        	textList.add("");
+            textList.add("");
+            textList.add("");
+            textList.add("import org.slf4j.Logger;");
+            textList.add("import org.slf4j.LoggerFactory;");
+            textList.add("");
             textList.add("import org.springframework.stereotype.Controller;");
             //textList.add("import org.springframework.web.bind.annotation.RequestMapping;");
             
         } else if ( package_name.contains("service") ) {
-        	textList.add("");
-        	textList.add("");
-        	textList.add("import org.slf4j.Logger;");
-        	textList.add("import org.slf4j.LoggerFactory;");
-        	textList.add("");
+            textList.add("");
+            textList.add("");
+            textList.add("import org.slf4j.Logger;");
+            textList.add("import org.slf4j.LoggerFactory;");
+            textList.add("");
             textList.add("import org.springframework.stereotype.Service;");
         }
         

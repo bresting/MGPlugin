@@ -20,9 +20,9 @@ public class ComponentResolver extends TemplateVariableResolver {
     
     @Override
     public void resolve(TemplateVariable variable, TemplateContext context) {
-    	
+        
         /**
-	     * ${package_declaration}
+         * ${package_declaration}
          * ${type_declaration}
          * 
          * typecomment=...
@@ -34,17 +34,18 @@ public class ComponentResolver extends TemplateVariableResolver {
          * type_declaration=public class RT1000{ }
          * package_declaration=package controller;
          */
-    	
+        
         String package_name   = context.getVariable("package_name");
         List<String> textList = new ArrayList<String>();
         
         if ( package_name.contains("controller") ) {
-        	textList.add("");
+            textList.add("");
             textList.add("@Controller");
         } else if ( package_name.contains("service") ) {
-        	textList.add("");
+            textList.add("");
             textList.add("@Service");
         }
+        
         variable.setValue(String.join(System.getProperty("line.separator"), textList));
     }
 }

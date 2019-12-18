@@ -14,11 +14,26 @@ package mgplugin.generator.entity;
  */
 public class MethodTemplate {
     
+    private String sqlCommandType;
     private String returnType;
     private String parameterType;
     private String parameterName;
     private String methodName;
     private String comment;
+    
+    
+    /**
+     * @return the sqlCommandType
+     */
+    public String getSqlCommandType() {
+        return sqlCommandType;
+    }
+    /**
+     * @param sqlCommandType the sqlCommandType to set
+     */
+    public void setSqlCommandType(String sqlCommandType) {
+        this.sqlCommandType = sqlCommandType;
+    }
     /**
      * @return the returnType
      */

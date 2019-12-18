@@ -13,9 +13,14 @@ import java.util.Properties;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -31,9 +36,13 @@ import freemarker.template.TemplateExceptionHandler;
  */
 public class Activator extends AbstractUIPlugin {
 
+    public static final String DBIO_GEN_VIEW_ID = "mgplugin.views.DBIOGenViewId";
+    public static final String MG_PLUGIN_CONSOLE = "MgPlugin";
+    
     private static final Properties    PLUGIN_PROP    = new Properties();
     private static       Configuration TEMPLAT_CONFIG = null;
     private static Connection CONNECTION = null;
+    
     /* ============================================================================================================== */
     // https://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F
     private static MessageConsole findConsole(String name) {
@@ -51,9 +60,35 @@ public class Activator extends AbstractUIPlugin {
         return myConsole;
     }
     
+    // http://www.javased.com/index.php?source_dir=js4emf/org.eclipse.emf.js4emf.ui/src/org/eclipse/emf/js4emf/ui/Activator.java
+    public MessageConsole getConsole(String name) {
+        IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+        IConsole[] existing = consoleManager.getConsoles();
+        for (int i = 0; i < existing.length; i++) {
+            if (name.equals(existing[i].getName())) {
+                return (MessageConsole) existing[i];
+            }
+        }
+        // no console found, so create a new one
+        MessageConsole console = new MessageConsole(name, null);
+        consoleManager.addConsoles(new IConsole[] { console });
+        return console;
+    }
+
+    public void showConsole(String name) {
+        IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        try {
+            IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+            view.display(getConsole(name));
+        } catch (PartInitException e) {
+        }
+    }
+    
+    
+    
     public static void console(String msg) {
         try {
-            MessageConsole myConsole = findConsole("MgPlugin");
+            MessageConsole myConsole = findConsole(MG_PLUGIN_CONSOLE);
             MessageConsoleStream out = myConsole.newMessageStream();
             out.println(msg);
         } catch (Exception e) {}

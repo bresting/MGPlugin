@@ -53,23 +53,34 @@ public class SourceGenerator {
     
     public static void main(String[] args) {
         
-        
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
         
-        //SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml");
-        //System.out.println(temp.getSource());
-        
-        //XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml", 2000);
+//        // XML -> Interface
+//        SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml");
+//        System.out.println(temp.getSource());
 
+        // Query -> vo
         XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1010Mapper.xml", 100);
         SourceTemplate inSourceTemplate = new SourceTemplate();
         SourceTemplate outSourceTemplate = new SourceTemplate();
         getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
         
-        
         System.out.println(inSourceTemplate.getSource());
         System.out.println("=========================");
         System.out.println(outSourceTemplate.getSource());
+        
+        /*
+        // DBIO
+        List<String> tableList = new ArrayList<>();
+        tableList.add("TB_XX002M");
+        
+        List<SourceTemplate> resultVoList        = new ArrayList<>();
+        List<SourceTemplate> resultMapperList    = new ArrayList<>();
+        
+        SourceGenerator.createDefaultDBIO(tableList, resultVoList, resultMapperList);
+        
+        System.out.println(resultMapperList.get(0).getSource());
+        */
         
         Activator.closeThisPlugin();
         
@@ -84,7 +95,6 @@ public class SourceGenerator {
           || query.getResultType   ().startsWith( Activator.getProperty("project.rootPackage") )  // 결과
         ) {
             if ( query.getParameterType().equals(query.getResultType()) ) {
-                
                 for (String tmp : outList) {
                     if (!inList.contains(tmp)) {
                         inList.add(tmp);
@@ -101,11 +111,11 @@ public class SourceGenerator {
                 root.put("queryId"    , query.getQueryId      ());
                 root.put("packageName", query.getParameterType());
                 root.put("typeName"   , query.getParameterType().substring(query.getParameterType().lastIndexOf(".") + 1));
-                root.put("fieldItems", result);
+                root.put("fieldItems" , result);
                 
                 String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
                 
-                inSourceTemplate.setSource(tmplSourceVo);
+                inSourceTemplate .setSource(tmplSourceVo  );
                 outSourceTemplate.setSource("입출력 같다.");
                 
             } else {
@@ -114,7 +124,7 @@ public class SourceGenerator {
                     /**
                      * 입력
                      */
-                    List<FieldTemplate> result = getMetaInfo(outList);
+                    List<FieldTemplate> result = getMetaInfo(inList);
                     
                     Map<String, Object> root = new HashMap<String, Object>();
                     root.put("xmlFile"    , query.getFileName     ());
@@ -132,7 +142,7 @@ public class SourceGenerator {
                     /**
                      * 결과
                      */
-                    List<FieldTemplate> result = getMetaInfo(inList);
+                    List<FieldTemplate> result = getMetaInfo(outList);
                     
                     Map<String, Object> root = new HashMap<String, Object>();
                     root.put("xmlFile"    , query.getFileName     ());
@@ -178,9 +188,9 @@ public class SourceGenerator {
                       || "update".equals( streamReader.getName().toString())
                       || "delete".equals( streamReader.getName().toString())
                     ) {
-                        queryId       = streamReader.getAttributeValue(null, "id"           );
-                        resultType    = streamReader.getAttributeValue(null, "resultType"   );
-                        parameterType = streamReader.getAttributeValue(null, "parameterType");
+                        queryId       = getAttr(streamReader, "id"           );
+                        resultType    = getAttr(streamReader, "resultType"   );
+                        parameterType = getAttr(streamReader, "parameterType");
                         
                         textList = new ArrayList<String>();
                     }
@@ -334,7 +344,9 @@ public class SourceGenerator {
                     new InputStreamReader( new FileInputStream( filePath ), Charset.forName( "UTF8" ) )
             );
             
-            String namespace   = "";
+            String namespace        = "";
+            String namespaceComment = "";
+            
             String nodeComment = "";
             
             while (streamReader.hasNext()) {
@@ -348,7 +360,8 @@ public class SourceGenerator {
                     
                     // 패키지
                     if ( streamReader.getName().toString().equals("mapper") ){
-                        namespace = getAttr(streamReader, "namespace");
+                        namespace        = getAttr(streamReader, "namespace");
+                        namespaceComment = nodeComment;
                     }
                     
                     // 선언문
@@ -384,11 +397,12 @@ public class SourceGenerator {
                         // import 구문 사용시 apache.StringUtil / spring.StringUtil 차이를 알 수 없음
                         // 타입은 전체 구분으로 함
                         MethodTemplate template = new MethodTemplate();
-                        template.setComment      (nodeComment  );
-                        template.setMethodName   (id           );
-                        template.setReturnType   (resultType   );
-                        template.setParameterType(parameterType);
-                        template.setParameterName(parameterName);
+                        template.setSqlCommandType(streamReader.getName().toString());
+                        template.setComment       (nodeComment  );
+                        template.setMethodName    (id           );
+                        template.setReturnType    (resultType   );
+                        template.setParameterType (parameterType);
+                        template.setParameterName (parameterName);
                         
                         methodTemplateList.add(template);
                         
@@ -402,6 +416,7 @@ public class SourceGenerator {
             String typeName    = namespace.substring(   namespace.lastIndexOf(".") + 1);
             
             Map<String, Object> root = new HashMap<String, Object>();
+            root.put("programComment", namespaceComment   );
             root.put("packageName"   , packageName        );
             root.put("typeName"      , typeName           );
             root.put("tableComment"  , ""                 );
@@ -483,7 +498,6 @@ public class SourceGenerator {
                 }
                 
                 fieldTemplate.setName     (column                                                    );  // 물리명
-                fieldTemplate.setNameUpper(CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, column) );
                 fieldTemplate.setComment  (tableValue.COLUMN_DESCRIPTION                             );  // 논리명
                 fieldTemplate.setType     (getJavaType(tableValue)                                   );  // 타입
                 fieldTemplate.setNexaType (getNexaType(tableValue                                  ) );  // 타입
@@ -597,7 +611,6 @@ public class SourceGenerator {
                     // 자바관련
                     tableValue.JAVA_TYPE       = getJavaType(tableValue);
                     tableValue.JAVA_NAME       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
-                    tableValue.JAVA_NAME_UPPER = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, tableValue.COLUMN_NAME);
                     
                     tableValueList.add(tableValue);
                 }
@@ -716,7 +729,6 @@ public class SourceGenerator {
             template.setComment   (StringUtils.defaultString(table.COLUMN_DESCRIPTION));  // 설명
             template.setPk        (table.IS_PRIMARYKEY                                );  // PK
             template.setName      (table.JAVA_NAME                                    );  // 필드명
-            template.setNameUpper (table.JAVA_NAME_UPPER                              );  // 대문자시작_필드명
             template.setBindName  ("#{" + table.JAVA_NAME + "}"                       );  // 바인드_필드명
             template.setColumnName(table.COLUMN_NAME                                  );  // DB컬럼명
             
@@ -765,11 +777,21 @@ public class SourceGenerator {
         case "decimal":
         case "numeric":
             
-            if ( table.SCALE == "0" ) {
+            if ( "0".equals(table.SCALE) ) {
                 returnType = "Long";
             } else {
                 returnType = "java.math.BigDecimal";
             }
+            break;
+
+        case "java.lang.long":
+            returnType = "Long";
+            break;
+        case "java.lang.string":
+            returnType = "String";
+            break;
+        case "java.lang.bigdecimal":
+            returnType = "java.lang.BigDecimal";
             break;
             
         default:
@@ -786,8 +808,11 @@ public class SourceGenerator {
         switch (table.TYPE.toLowerCase()) {
         case "decimal":
         case "numeric":
+        case "java.lang.long":
+        case "java.lang.bigdecimal":
             returnType = "BIGDECIMAL";
             break;
+
         default:
             returnType = "STRING";
             break;

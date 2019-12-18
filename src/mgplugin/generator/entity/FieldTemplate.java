@@ -17,7 +17,6 @@ public class FieldTemplate {
     // 필드셋 반복부 관련
     private String name;
     private String type;
-    private String nameUpper;
     private String columnName;
     private String bindName;
     private String comment;
@@ -59,18 +58,7 @@ public class FieldTemplate {
     public void setType(String type) {
         this.type = type;
     }
-    /**
-     * @return the nameUpper
-     */
-    public String getNameUpper() {
-        return nameUpper;
-    }
-    /**
-     * @param nameUpper the nameUpper to set
-     */
-    public void setNameUpper(String nameUpper) {
-        this.nameUpper = nameUpper;
-    }
+
     /**
      * @return the columnName
      */
@@ -232,7 +220,7 @@ public class FieldTemplate {
      */
     @Override
     public String toString() {
-        return "FieldTemplate [name=" + name + ", type=" + type + ", nameUpper=" + nameUpper + ", columnName="
+        return "FieldTemplate [name=" + name + ", type=" + type + ", columnName="
                 + columnName + ", bindName=" + bindName + ", comment=" + comment + ", pk=" + pk + ", nexaType="
                 + nexaType + ", nexaSize=" + nexaSize + ", typeSpace=" + typeSpace + ", nameSpace=" + nameSpace
                 + ", columnNameSpace=" + columnNameSpace + ", commentSpace=" + commentSpace + ", pkNameSpace="

@@ -29,6 +29,7 @@ import org.eclipse.ui.part.ViewPart;
 import mgplugin.Activator;
 import mgplugin.generator.SourceGenerator;
 import mgplugin.generator.entity.SourceTemplate;
+import org.eclipse.wb.swt.ResourceManager;
 
 /**
  * <pre>
@@ -221,6 +222,34 @@ public class DBIOGenView extends ViewPart {
         textParameter = new Text(composite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         
         textResult = new Text(composite, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+        
+        Button btnNewButton = new Button(parent, SWT.NONE);
+        btnNewButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                textParameter.setText("");
+                textResult.setText("");
+            }
+        });
+        FormData fd_btnNewButton = new FormData();
+        fd_btnNewButton.top = new FormAttachment(btnCreateDBIO, 0, SWT.TOP);
+        fd_btnNewButton.left = new FormAttachment(composite, 0, SWT.LEFT);
+        btnNewButton.setLayoutData(fd_btnNewButton);
+        btnNewButton.setText("지우기");
+        
+        Button btnNewButton_1 = new Button(parent, SWT.NONE);
+        btnNewButton_1.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Activator.getDefault().showConsole(Activator.MG_PLUGIN_CONSOLE);
+            }
+        });
+        btnNewButton_1.setImage(ResourceManager.getPluginImage("org.eclipse.ui.console", "/icons/full/eview16/console_view.png"));
+        FormData fd_btnNewButton_1 = new FormData();
+        fd_btnNewButton_1.top = new FormAttachment(lblConnStatus, -6, SWT.TOP);
+        fd_btnNewButton_1.right = new FormAttachment(100, -10);
+        btnNewButton_1.setLayoutData(fd_btnNewButton_1);
+        btnNewButton_1.setText("콘솔");
         
         createActions();
         initializeToolBar();

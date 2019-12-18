@@ -9,6 +9,10 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.part.EditorPart;
 
 import mgplugin.Activator;
@@ -30,7 +34,8 @@ import mgplugin.views.DBIOGenView;
  * </pre>
  */
 public class QueryToVoGenHandler extends AbstractHandler {
-
+    
+    
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
         
@@ -41,7 +46,6 @@ public class QueryToVoGenHandler extends AbstractHandler {
         if ( editorPart instanceof EditorPart ) {
             
             IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
-
             
             IEditorSite iEditorSite = editorPart.getEditorSite();
             
@@ -61,12 +65,26 @@ public class QueryToVoGenHandler extends AbstractHandler {
                     
                     SourceGenerator.getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
                     
-                    DBIOGenView.textParameter.setText( inSourceTemplate.getSource()  );
-                    DBIOGenView.textResult.setText   ( outSourceTemplate.getSource() );
+                    try {
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(Activator.DBIO_GEN_VIEW_ID);
+                    } catch (PartInitException e) {
+                        e.printStackTrace();
+                    }
+                    
+                    if ( DBIOGenView.textParameter != null ) {
+                        DBIOGenView.textParameter.setText( inSourceTemplate.getSource ()  );
+                    } else {
+                        Activator.console("MG 기본 DBIO생성기를 활성화 해주세요.");
+                    }
+                    
+                    if ( DBIOGenView.textResult != null ) {
+                        DBIOGenView.textResult.setText   ( outSourceTemplate.getSource() );
+                    } else {
+                        Activator.console("MG 기본 DBIO생성기를 활성화 해주세요.");
+                    }
                 }
             }
         }
         return null;
     }
-
 }

@@ -28,6 +28,4 @@ public class TableValue {
     
     public String JAVA_TYPE          = "";
     public String JAVA_NAME          = "";
-    public String JAVA_NAME_UPPER    = "";
-    
 }
