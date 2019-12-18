@@ -497,10 +497,10 @@ public class SourceGenerator {
                     tableValue.COLUMN_DESCRIPTION = "미 등록 용어입니다.";
                 }
                 
-                fieldTemplate.setName     (column                                                    );  // 물리명
-                fieldTemplate.setComment  (tableValue.COLUMN_DESCRIPTION                             );  // 논리명
-                fieldTemplate.setType     (getJavaType(tableValue)                                   );  // 타입
-                fieldTemplate.setNexaType (getNexaType(tableValue                                  ) );  // 타입
+                fieldTemplate.setName     (column                       );  // 물리명
+                fieldTemplate.setComment  (tableValue.COLUMN_DESCRIPTION);  // 논리명
+                fieldTemplate.setType     (getJavaType(tableValue)      );  // 타입
+                fieldTemplate.setNexaType (getNexaType(tableValue)      );  // 타입
                 
                 resultList.add(fieldTemplate);
                 

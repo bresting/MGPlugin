@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 일자기본 기본DBIO -->
 <mapper namespace="tis.biz.xx.mapper.XX1010Mapper">
+
+    <select id="selectPK" resultType="tis.dbio.xx.TB_XX001M" parameterType="tis.dbio.xx.TB_XX001M">
+    SELECT /* tis.dbio.xx.TB_XX001MMapper.selectPK */
+           COMM_CD_ID    AS commCdId   /* 공통코드ID*/
+         , REG_DTTM      AS regDttm    /* 등록일시  */
+         , CHANGE_EMP_ID AS changeEmpId/* 변경직원ID*/
+         , TEMP_CREAT_WORD1 AS tempCreatWord1
+         , TEMP_CREAT_WORD1 AS tempCreatWord
+         , TEMP_CREAT_WORD1 AS tempCreatWord3
+      FROM TB_XX001M /* 공통코드상세 */
+     WHERE 1 = 1
+       AND COMM_CD_ID = #{commCdId}/* 공통코드ID */
+       AND COMM_CD    = #{commCd}  /* 공통코드   */
+    </select>
 
     <!-- 일자기본 월별조회 -->
     <select id="selectList" resultType="tis.biz.xx.vo.XX1010DateInfo" parameterType="tis.biz.xx.vo.XX1010DateInfo">
     SELECT /* tis.biz.xx.mapper.XX1010Mapper.selectList */
            STDR_DATE     AS stdrDate    /* 기준일자   */
          , SALS_DD_YN    AS salsDdYn    /* 영업일여부 */
-         , INT_RT        AS intRt3       /* 이자율     */
          , INT_RT        AS intRt3       /* 이자율     */
          , INT_RT        AS intRt2       /* 이자율     */
          , TRAN_AMT      AS tranAmt     /* 거래금액   */
@@ -16,6 +30,209 @@
        AND STDR_DATE   LIKE CONCAT(#{stdrYm},'__')    /* 기준일자 - 기준년월 */
        AND STDR_DATE   LIKE CONCAT(#{stdrYm3},'__')    /* 기준일자 - 기준년월 */
      ORDER BY STDR_DATE
+    </select>
+
+
+    <select id="selectList2" resultType="tis.biz.xx.vo.XX1010DateInfo" parameterType="tis.biz.xx.vo.XX1010DateInfo">
+        /* HRMM5020DAO.getSEARCH00 */
+        SELECT   A.CORP_CODE        /* 법인코드 */
+                ,A.EMPL_NUMB        /* 직원번호 */
+                ,A.EMPL_NAME        /* 직원명 */
+                ,A.ENGL_NAME        /* 성명(영문) */
+                ,A.CHIN_NAME        /* 성명(한문) */
+                ,A.BUSI_CODE        /* 사업자코드 */
+                ,dbo.FN_CO_COMPANYN(A.CORP_CODE,'BUSI_NAME',A.BUSI_CODE) AS BUSI_NAME   /* 사업자명 */
+                ,ISNULL(C.DEPT_CODE,A.DEPT_CODE) AS DEPT_CODE       /* 소속부서코드 */
+                ,dbo.FN_CO_DEPARTMN(A.CORP_CODE,'DEPT_NAME',ISNULL(C.DEPT_CODE,A.DEPT_CODE)) AS DEPT_NAME   /* 소속부서명 */
+                ,ISNULL(C.HEAD_DEPT,A.HEAD_DEPT) AS HEAD_DEPT       /* 부서장여부 */
+                ,ISNULL(C.WORK_DEPT,A.WORK_DEPT) AS WORK_DEPT       /* 근무부서코드 */
+                ,dbo.FN_CO_DEPARTMN(A.CORP_CODE,'DEPT_NAME',ISNULL(C.WORK_DEPT,A.WORK_DEPT)) AS WORK_DPNM   /* 근무부서명 */
+                ,ISNULL(C.CONC_DEPT,A.CONC_DEPT) AS CONC_DEPT       /* 겸직부서코드 */
+                ,dbo.FN_CO_DEPARTMN(A.CORP_CODE,'DEPT_NAME',ISNULL(C.CONC_DEPT,A.CONC_DEPT)) AS CONC_DPNM   /* 겸직부서명 */
+                ,ISNULL(C.COHE_DEPT,A.COHE_DEPT) AS COHE_DEPT       /* 겸직부서장여부 */
+                ,ISNULL(C.DUTY_LIAB,A.DUTY_LIAB) AS DUTY_LIAB       /* 직책[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_LIAB','SMAL_NAME',ISNULL(C.DUTY_LIAB,A.DUTY_LIAB)) AS DUTY_LINM   /* 직책명 */
+                ,ISNULL(C.DUTY_POSI,A.DUTY_POSI) AS DUTY_POSI       /* 직위[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_POSI','SMAL_NAME',ISNULL(C.DUTY_POSI,A.DUTY_POSI)) AS DUTY_PONM   /* 직위명 */
+                ,ISNULL(C.DUTY_CLAS,A.DUTY_CLAS) AS DUTY_CLAS       /* 직종[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_CLAS','SMAL_NAME',ISNULL(C.DUTY_CLAS,A.DUTY_CLAS)) AS DUTY_CLNM   /* 직종명 */
+                ,ISNULL(C.DUTY_TYPE,A.DUTY_TYPE) AS DUTY_TYPE       /* 직무[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_TYPE','SMAL_NAME',ISNULL(C.DUTY_TYPE,A.DUTY_TYPE)) AS DUTY_TYNM   /* 직무명 */
+                ,ISNULL(C.DUTY_RANK,A.DUTY_RANK) AS DUTY_RANK       /* 직급[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_RANK','SMAL_NAME',ISNULL(C.DUTY_RANK,A.DUTY_RANK)) AS DUTY_RANM   /* 직급명 */
+                ,ISNULL(C.HIRE_TYPE,A.HIRE_TYPE) AS HIRE_TYPE       /* 채용구분[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'HIRE_TYPE','SMAL_NAME',ISNULL(C.HIRE_TYPE,A.HIRE_TYPE)) AS HIRE_TYNM   /* 채용구분명 */
+                ,ISNULL(C.DUTY_STAT,A.DUTY_STAT) AS DUTY_STAT       /* 근무상태[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'DUTY_STAT','SMAL_NAME',ISNULL(C.DUTY_STAT,A.DUTY_STAT)) AS DUTY_STNM   /* 근무상태명 */
+                ,A.ENTE_RETI        /* 재.퇴직구분[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'ENTE_RETI','SMAL_NAME',A.ENTE_RETI) AS ENTE_RENM   /* 재.퇴직구분명 */
+                ,ISNULL(C.PAYX_STEP,A.PAYX_STEP) AS PAYX_STEP       /* 호봉 */
+                ,ISNULL(C.PROM_YMDD,A.PROM_YMDD) AS PROM_YMDD       /* 차기승급일 */
+                ,ISNULL(C.PAYP_GROP,A.PAYP_GROP) AS PAYP_GROP       /* 급여지급그룹코드[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'PAYP_GROP','SMAL_NAME',ISNULL(C.PAYP_GROP,A.PAYP_GROP)) AS PAYP_GRNM   /* 급여지급그룹명 */
+                ,ISNULL(C.PAYG_GROP,A.PAYG_GROP) AS PAYG_GROP       /* 급여직군코드[공통코드] */
+                ,dbo.FN_CO_COMCODED(A.CORP_CODE,'PAYG_GROP','SMAL_NAME',ISNULL(C.PAYG_GROP,A.PAYG_GROP)) AS PAYG_GRNM   /* 급여직군명 */
+                ,A.ENTE_YMDD        /* 입사일 */
+                ,A.RETI_YMDD        /* 퇴사일 */
+                ,A.REMK_DESC        /* 비고 */
+                ,A.PICT_URNM        /* 물리사진명 */
+                ,B.BIRT_YMDD        /* 생연월일 */
+                ,B.SOLA_LUNA        /* 양음구분[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'SOLA_LUNA','SMAL_NAME',B.SOLA_LUNA) AS SOLA_LUNM   /* 양음구분명 */
+                ,B.SEXX_TYPE        /* 성별[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'SEXX_TYPE','SMAL_NAME',B.SEXX_TYPE) AS SEXX_TYNM   /* 성별명 */
+                ,B.TELE_NUMB        /* 전화번호 */
+                ,B.HAND_NUMB        /* 휴대전화번호 */
+                ,B.INNE_NUMB        /* 사내전화번호 */
+                ,B.MAIL_ADDR        /* 이메일 */
+                ,B.HOBB_NOTE        /* 취미 */
+                ,B.SPEC_NOTE        /* 특기 */
+                ,B.BLOD_TYPE        /* 혈액형[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'BLOD_TYPE','SMAL_NAME',B.BLOD_TYPE) AS BLOD_TYNM   /* 혈액형명 */
+                ,B.RELI_GION        /* 종교[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'RELI_GION','SMAL_NAME',B.RELI_GION) AS RELI_GINM   /* 종교명 */
+                ,B.NATI_ONAL        /* 국적[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'NATI_ONAL','SMAL_NAME',B.NATI_ONAL) AS NATI_ONNM   /* 국적명 */
+                ,B.STAT_URCM        /* 신장(cm) */
+                ,B.WEIG_THKG        /* 몸무게(kg) */
+                ,B.SIGH_LEFT        /* 시력(좌) */
+                ,B.SIGH_GIRH        /* 시력(우) */
+                ,B.FAPS_NUMB        /* 본적우편번호 */
+                ,B.FAMI_MAIN        /* 본적주소 */
+                ,B.FAMI_DETL        /* 본적상세주소 */
+                ,B.POST_NUMB        /* 우편번호 */
+                ,B.ADDR_MAIN        /* 주소 */
+                ,B.ADDR_DETL        /* 상세주소 */
+                ,B.LIPS_NUMB        /* 거주지우편번호 */
+                ,B.LIVE_MAIN        /* 거주지주소 */
+                ,B.LIVE_DETL        /* 거주지상세주소 */
+                ,B.WEDD_YSNO        /* 결혼여부[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'WEDD_YSNO','SMAL_NAME',B.WEDD_YSNO) AS WEDD_YSNM   /* 결혼여부명 */
+                ,B.TROU_TYPE        /* 장애유형[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'TROU_TYPE','SMAL_NAME',B.TROU_TYPE) AS TROU_TYNM   /* 장애유형명 */
+                ,B.TROU_RANK        /* 장애등급[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'TROU_RANK','SMAL_NAME',B.TROU_RANK) AS TROU_RANM   /* 장애등급명 */
+                ,B.FORT_NUMB        /* 보훈번호 */
+                ,B.MERI_RELA        /* 유공자관계[공통코드] */
+                ,dbo.FN_CO_COMCODED(B.CORP_CODE,'MERI_RELA','SMAL_NAME',B.MERI_RELA) AS MERI_RENM   /* 유공자관계명 */
+                ,B.OTHE_NOTE        /* 특이사항 */
+        FROM     HR_HUMANMAM AS A WITH(NOLOCK)
+        INNER JOIN HR_HUMANMAD AS B WITH(NOLOCK) ON B.CORP_CODE = A.CORP_CODE AND B.EMPL_NUMB = A.EMPL_NUMB
+        LEFT  JOIN dbo.FN_TBL_HR_APPINFON(#SHRCORP_CODE#,#SHRBASE_YMDD#) C ON A.EMPL_NUMB = C.EMPL_NUMB
+        WHERE    1=1
+        AND      A.CORP_CODE = #SHRCORP_CODE#
+        /* 조직구분 권한 처리 시작 */
+        AND      EXISTS(SELECT Z.DEPT_CODE
+                        FROM   CO_ORGANIZN Z WITH(NOLOCK) 
+                        WHERE  Z.CORP_CODE = A.CORP_CODE
+                        AND    Z.ORGA_GUBN = #sORGA_GUBN#
+                        AND    Z.MERG_CODE LIKE (SELECT dbo.FN_CO_ORGANIZN(#sCORP_CODE#     /* 법인코드 */
+                                                                          ,#sORGA_GUBN#     /* 조직구분 */
+                                                                          ,#sDEPT_GUBN#     /* 부서구분(전사,본부,부,처,과 등) */
+                                                                          ,#sDEPT_CODE#     /* 부서코드 */
+                                                                          ,#SHRBASE_YMDD#   /* 기준일 */
+                                                                          ,#sSEAR_GUBN#     /* 조회구분자 */
+                                                                          )) + '%'
+                        <![CDATA[
+                        AND    Z.STRT_YMDD <= #SHRBASE_YMDD#
+                        AND    Z.ENDT_YMDD >= #SHRBASE_YMDD#
+                        ]]>
+                        AND    Z.DEPT_CODE = ISNULL(C.DEPT_CODE,A.DEPT_CODE)
+                        )
+        /* 조직구분 권한 처리 종료 */
+        <isNotEmpty property="SHRENTE_YMDF">
+        <![CDATA[
+        AND      A.ENTE_YMDD >= #SHRENTE_YMDF#
+        ]]>
+        </isNotEmpty>
+        <isNotEmpty property="SHRENTE_YMDT">
+        <![CDATA[
+        AND      A.ENTE_YMDD <= #SHRENTE_YMDT#
+        ]]>
+        </isNotEmpty>
+        <isNotEmpty property="SHRRETI_YMDF">
+        <![CDATA[
+        AND      A.RETI_YMDD >= #SHRRETI_YMDF#
+        ]]>
+        </isNotEmpty>
+        <isNotEmpty property="SHRRETI_YMDT">
+        <![CDATA[
+        AND      A.RETI_YMDD <= #SHRRETI_YMDT#
+        ]]>
+        </isNotEmpty>
+        <isNotEmpty property="SHRDEPT_CODE">
+        <isEqual property="SHRLOWX_DEPT" compareValue="0">
+        AND      ISNULL(C.DEPT_CODE,A.DEPT_CODE) = #SHRDEPT_CODE#
+        </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="SHRDEPT_CODE">
+        <isEqual property="SHRLOWX_DEPT" compareValue="1">
+        AND      EXISTS(SELECT Z.DEPT_CODE
+                        FROM   CO_ORGANIZN Y WITH(NOLOCK) 
+                        LEFT JOIN CO_ORGANIZN Z WITH(NOLOCK) ON Y.CORP_CODE = Z.CORP_CODE
+                                                            AND Y.ORGA_GUBN = Z.ORGA_GUBN
+                                                            AND Z.MERG_CODE LIKE Y.MERG_CODE + '%'
+                        WHERE  Y.CORP_CODE = A.CORP_CODE
+                        AND    Y.ORGA_GUBN = #sORGA_GUBN#
+                        AND    #SHRBASE_YMDD# BETWEEN Y.STRT_YMDD AND ISNULL(Y.ENDT_YMDD,'99991231')
+                        AND    Y.DEPT_CODE = #sDEPT_CODE#
+                        AND    Z.DEPT_CODE = ISNULL(C.DEPT_CODE,A.DEPT_CODE)
+                        )
+        </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="SHRSEXX_TYPE">
+        AND      A.SEXX_TYPE = #SHRSEXX_TYPE#
+        </isNotEmpty>
+        <isNotEmpty property="SHRWORK_DEPT">
+        AND      ISNULL(C.WORK_DEPT,A.WORK_DEPT) = #SHRWORK_DEPT#
+        </isNotEmpty>
+        <isNotEmpty property="SHRCONC_DEPT">
+        AND      ISNULL(C.CONC_DEPT,A.CONC_DEPT) = #SHRCONC_DEPT#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_LIAB">
+        AND      ISNULL(C.DUTY_LIAB,A.DUTY_LIAB) = #SHRDUTY_LIAB#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_POSI">
+        AND      ISNULL(C.DUTY_POSI,A.DUTY_POSI) = #SHRDUTY_POSI#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_RANK">
+        AND      ISNULL(C.DUTY_RANK,A.DUTY_RANK) = #SHRDUTY_RANK#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_CLAS">
+        AND      ISNULL(C.DUTY_CLAS,A.DUTY_CLAS) = #SHRDUTY_CLAS#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_TYPE">
+        AND      ISNULL(C.DUTY_TYPE,A.DUTY_TYPE) = #SHRDUTY_TYPE#
+        </isNotEmpty>
+        <isNotEmpty property="SHREMPL_NUMB">
+        AND      A.EMPL_NUMB = #SHREMPL_NUMB#
+        </isNotEmpty>
+        <isNotEmpty property="SHRDUTY_STAT">
+        AND      ISNULL(C.DUTY_STAT,A.DUTY_STAT) = #SHRDUTY_STAT#
+        </isNotEmpty>
+        <isNotEmpty property="SHRHIRE_TYPE">
+        AND      ISNULL(C.HIRE_TYPE,A.HIRE_TYPE) = #SHRHIRE_TYPE#
+        </isNotEmpty>
+        <isNotEmpty property="SHRPAYP_GROP">
+        AND      ISNULL(C.PAYP_GROP,A.PAYP_GROP) = #SHRPAYP_GROP#
+        </isNotEmpty>
+        <isNotEmpty property="SHRPAYG_GROP">
+        AND      ISNULL(C.PAYG_GROP,A.PAYG_GROP) = #SHRPAYG_GROP#
+        </isNotEmpty>
+        <isNotEmpty property="SHRENTE_RETI">
+        AND      A.ENTE_RETI = #SHRENTE_RETI#
+        </isNotEmpty>
+        <isNotEmpty property="SHRHEAD_DEPT">
+        <isEqual property="SHRHEAD_DEPT" compareValue="1">
+        AND      ISNULL(C.HEAD_DEPT,A.HEAD_DEPT) = #SHRHEAD_DEPT#
+        </isEqual>
+        </isNotEmpty>
+        <isNotEmpty property="SHRCOHE_DEPT">
+        <isEqual property="SHRCOHE_DEPT" compareValue="1">
+        AND      ISNULL(C.COHE_DEPT,A.COHE_DEPT) = #SHRCOHE_DEPT#
+        </isEqual>
+        </isNotEmpty>
+        ORDER BY A.EMPL_NUMB    
     </select>
 
 </mapper>

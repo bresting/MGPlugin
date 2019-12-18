@@ -111,18 +111,8 @@
             class="mgplugin.views.DBIOGenView"
             icon="icons/sample.png"
             id="mgplugin.views.DBIOGenViewId"
-            name="MG 기본 DBIO 생성기"
-            >
+            name="MG 기본 DBIO 생성기" >
       </view>
-      <!--
-      <view
-            category="mgplugin.category.view"
-            class="mgplugin.views.SimpleView"
-            icon="icons/sample.png"
-            id="mgplugin.views.SimpleView"
-            name="MG 기본 출력뷰">
-      </view>
-      -->
    </extension>
 
 </plugin>
