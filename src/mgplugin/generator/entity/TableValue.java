@@ -24,7 +24,8 @@ public class TableValue {
     public String SCALE              = "";
     public String IS_NULLABLE        = "";
     public String COLLATION_NAME     = "";
-    public String IS_PRIMARYKEY      = "0";
+    public String PRIMARYKEY_YN      = "N";
+    public String IDENTITY_YN        = "N";
     
     public String JAVA_TYPE          = "";
     public String JAVA_NAME          = "";

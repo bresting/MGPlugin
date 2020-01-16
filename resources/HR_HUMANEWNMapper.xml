@@ -8,24 +8,6 @@
     <select id="selectListPK" resultType="tis.dbio.hu.HR_HUMANEWN" parameterType="tis.dbio.hu.HR_HUMANEWN">
     SELECT /* tis.dbio.hu.HR_HUMANEWNMapper.selectPK */
            CORP_CODE AS corpCode /* 법인코드           */
-         , INST_NUMB AS instNumb /* 등록번호           */
-         , EMPL_NUMB AS emplNumb /* 직원번호           */
-         , EMPL_NAME AS emplName /* 직원명             */
-         , ENTE_YMDD AS enteYmdd /* 입사일             */
-         , REGE_NUMB AS regeNumb /* 주민등록번호       */
-         , SEXX_TYPE AS sexxType /* 성별[공통코드]     */
-         , ENGL_NAME AS englName /* 성명(영문)         */
-         , CHIN_NAME AS chinName /* 성명(한문)         */
-         , SOLA_LUNA AS solaLuna /* 양음구분[공통코드] */
-         , BIRT_YMDD AS birtYmdd /* 생연월일           */
-         , TELE_NUMB AS teleNumb /* 전화번호           */
-         , HAND_NUMB AS handNumb /* 휴대전화번호       */
-         , REMK_DESC AS remkDesc /* 비고               */
-         , INST_EMPL AS instEmpl /* 등록자사번         */
-         , INST_DATE AS instDate /* 등록일시           */
-         , INST_PROG AS instProg /* 등록프로그램ID     */
-         , UPDT_EMPL AS updtEmpl /* 수정자사번         */
-         , UPDT_DATE AS updtDate /* 수정일시           */
          , UPDT_PROG AS updtProg /* 수정프로그램ID     */
       FROM HR_HUMANEWN /*  */
      WHERE 1 = 1

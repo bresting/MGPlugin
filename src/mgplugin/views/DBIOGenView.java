@@ -25,11 +25,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.wb.swt.ResourceManager;
 
 import mgplugin.Activator;
 import mgplugin.generator.SourceGenerator;
 import mgplugin.generator.entity.SourceTemplate;
-import org.eclipse.wb.swt.ResourceManager;
+import mgplugin.generator.entity.TableValue;
+import mgplugin.query.QueryExec;
 
 /**
  * <pre>

@@ -15,6 +15,7 @@ package mgplugin.generator.entity;
 public class MethodTemplate {
     
     private String sqlCommandType;
+    private String generic;
     private String returnType;
     private String parameterType;
     private String parameterName;
@@ -33,6 +34,20 @@ public class MethodTemplate {
      */
     public void setSqlCommandType(String sqlCommandType) {
         this.sqlCommandType = sqlCommandType;
+    }
+    
+    
+    /**
+     * @return the generic
+     */
+    public String getGeneric() {
+        return generic;
+    }
+    /**
+     * @param generic the generic to set
+     */
+    public void setGeneric(String generic) {
+        this.generic = generic;
     }
     /**
      * @return the returnType

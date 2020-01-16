@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
@@ -55,12 +54,15 @@ public class SourceGenerator {
         
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
         
-//        // XML -> Interface
-//        SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\HR_HUMANEWNMapper.xml");
-//        System.out.println(temp.getSource());
+        // XML -> Interface
+        SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1000Mapper.xml");
+        System.out.println(temp.getSource());
 
+        // C:\eclipse_rcp\workspace\MgPlugin\resources\XX1000Mapper.xml
+        
+        /*
         // Query -> vo
-        XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1010Mapper.xml", 100);
+        XMLQuery query = SourceGenerator.getQueryAtOffset("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1000Mapper.xml", 100);
         SourceTemplate inSourceTemplate = new SourceTemplate();
         SourceTemplate outSourceTemplate = new SourceTemplate();
         getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
@@ -68,11 +70,12 @@ public class SourceGenerator {
         System.out.println(inSourceTemplate.getSource());
         System.out.println("=========================");
         System.out.println(outSourceTemplate.getSource());
+         */
         
         /*
         // DBIO
         List<String> tableList = new ArrayList<>();
-        tableList.add("TB_XX002M");
+        tableList.add("TB_XX001M");
         
         List<SourceTemplate> resultVoList        = new ArrayList<>();
         List<SourceTemplate> resultMapperList    = new ArrayList<>();
@@ -81,9 +84,8 @@ public class SourceGenerator {
         
         System.out.println(resultMapperList.get(0).getSource());
         */
-        
         Activator.closeThisPlugin();
-        
+      
     }
     
     public static void getQueryVoFields(XMLQuery query, SourceTemplate inSourceTemplate, SourceTemplate outSourceTemplate) {
@@ -91,73 +93,77 @@ public class SourceGenerator {
         List<String> inList  = getInputFields (query.getQuery());
         List<String> outList = getOutputFields(query.getQuery());
         
-        if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") )  // 입력
-          || query.getResultType   ().startsWith( Activator.getProperty("project.rootPackage") )  // 결과
-        ) {
-            if ( query.getParameterType().equals(query.getResultType()) ) {
-                for (String tmp : outList) {
-                    if (!inList.contains(tmp)) {
-                        inList.add(tmp);
-                    }
+        if (StringUtils.isEmpty(query.getParameterType() ) ) {
+            query.setParameterType("tis.EmptyType");
+        }
+        
+        if (StringUtils.isEmpty(query.getResultType() ) ) {
+            query.setResultType("tis.EmptyType");
+        }
+        
+        if ( query.getParameterType().equals(query.getResultType()) ) {
+            for (String tmp : outList) {
+                if (!inList.contains(tmp)) {
+                    inList.add(tmp);
                 }
-                
+            }
+            
+            /**
+             * 입력 & 결과
+             */
+            List<FieldTemplate> result = getMetaInfo(inList);
+            
+            Map<String, Object> root = new HashMap<String, Object>();
+            root.put("userName"   , Activator.getProperty("user.name")); 
+            root.put("xmlFile"    , query.getFileName     ());
+            root.put("queryId"    , query.getQueryId      ());
+            root.put("packageName", query.getParameterType().substring(0, query.getParameterType().lastIndexOf(".")    ) );
+            root.put("typeName"   , query.getParameterType().substring(   query.getParameterType().lastIndexOf(".") + 1) );
+            root.put("fieldItems" , result);
+            
+            String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
+            
+            inSourceTemplate .setSource(tmplSourceVo  );
+            outSourceTemplate.setSource("입출력 같다.");
+            
+        } else {
+
+            if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
                 /**
-                 * 입력 & 결과
+                 * 입력
                  */
                 List<FieldTemplate> result = getMetaInfo(inList);
                 
                 Map<String, Object> root = new HashMap<String, Object>();
+                root.put("userName"   , Activator.getProperty("user.name"));
                 root.put("xmlFile"    , query.getFileName     ());
                 root.put("queryId"    , query.getQueryId      ());
-                root.put("packageName", query.getParameterType());
-                root.put("typeName"   , query.getParameterType().substring(query.getParameterType().lastIndexOf(".") + 1));
+                root.put("packageName", query.getParameterType().substring(0, query.getParameterType().lastIndexOf(".")    ) );
+                root.put("typeName"   , query.getParameterType().substring(   query.getParameterType().lastIndexOf(".") + 1) );
                 root.put("fieldItems" , result);
                 
                 String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
                 
-                inSourceTemplate .setSource(tmplSourceVo  );
-                outSourceTemplate.setSource("입출력 같다.");
-                
-            } else {
-
-                if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
-                    /**
-                     * 입력
-                     */
-                    List<FieldTemplate> result = getMetaInfo(inList);
-                    
-                    Map<String, Object> root = new HashMap<String, Object>();
-                    root.put("xmlFile"    , query.getFileName     ());
-                    root.put("queryId"    , query.getQueryId      ());
-                    root.put("packageName", query.getParameterType());
-                    root.put("typeName"   , query.getParameterType().substring(query.getParameterType().lastIndexOf(".") + 1));
-                    root.put("fieldItems" , result);
-                    
-                    String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
-                    
-                    inSourceTemplate.setSource(tmplSourceVo);
-                }
-                
-                if ( query.getResultType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
-                    /**
-                     * 결과
-                     */
-                    List<FieldTemplate> result = getMetaInfo(outList);
-                    
-                    Map<String, Object> root = new HashMap<String, Object>();
-                    root.put("xmlFile"    , query.getFileName     ());
-                    root.put("queryId"    , query.getQueryId      ());
-                    root.put("packageName", query.getResultType());
-                    root.put("typeName"   , query.getResultType().substring(query.getResultType().lastIndexOf(".") + 1));
-                    root.put("fieldItems" , result);
-                    
-                    String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
-                    
-                    outSourceTemplate.setSource(tmplSourceVo);
-                }
+                inSourceTemplate.setSource(tmplSourceVo);
             }
-        } else {
-            Activator.console("입력/결과 프로젝트 유형이 아님");
+            
+            if ( query.getResultType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
+                /**
+                 * 결과
+                 */
+                List<FieldTemplate> result = getMetaInfo(outList);
+                
+                Map<String, Object> root = new HashMap<String, Object>();
+                root.put("userName"   , Activator.getProperty("user.name"));
+                root.put("xmlFile"    , query.getFileName     ());
+                root.put("queryId"    , query.getQueryId      ());
+                root.put("packageName", query.getResultType().substring(0, query.getResultType().lastIndexOf(".")    ) );
+                root.put("typeName"   , query.getResultType().substring(   query.getResultType().lastIndexOf(".") + 1) );
+                root.put("fieldItems" , result);
+                
+                String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
+                outSourceTemplate.setSource(tmplSourceVo);
+            }
         }
     }
     
@@ -172,9 +178,9 @@ public class SourceGenerator {
         // XML 파일명
         xmlQuery.setFileName(filePath.substring(filePath.lastIndexOf("\\") + 1));
         
-        XMLStreamReader streamReader = null;
-        try {
-            streamReader = factory.createXMLStreamReader(new FileReader(filePath));
+        try (FileReader reader = new FileReader(filePath)) {
+            
+            XMLStreamReader streamReader = factory.createXMLStreamReader(reader);
             String queryId       = "";
             String resultType    = "";
             String parameterType = "";
@@ -221,17 +227,11 @@ public class SourceGenerator {
             
         } catch (Exception e) {
             Activator.console(e);
-        } finally {
-            if ( streamReader != null ) {
-                try {
-                    streamReader.close();
-                } catch (XMLStreamException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        } 
         
-        xmlQuery.setQuery(String.join("", textList));
+        if ( textList != null) {
+            xmlQuery.setQuery(String.join("", textList));
+        }
         return xmlQuery;
     }
     
@@ -338,10 +338,10 @@ public class SourceGenerator {
         SourceTemplate       sourceTemplate     = new SourceTemplate();
         List<MethodTemplate> methodTemplateList = new ArrayList<>();
         
-        XMLStreamReader streamReader = null;
-        try {
+        try ( FileInputStream fileStream = new FileInputStream( filePath )  ){
+            XMLStreamReader streamReader = null;
             streamReader = factory.createXMLStreamReader(
-                    new InputStreamReader( new FileInputStream( filePath ), Charset.forName( "UTF8" ) )
+                    new InputStreamReader( fileStream, Charset.forName( "UTF8" ) )
             );
             
             String namespace        = "";
@@ -386,6 +386,22 @@ public class SourceGenerator {
                             resultType = "void";
                         }
                         
+                        // Map 기반 generic
+                        String generic = "";
+                        List<String> genericList = new ArrayList<>();
+                        if (resultType.equals("java.util.Map")) {
+                            resultType = "java.util.Map<K1,V1>";
+                            genericList.add("K1,V1");
+                        }
+                        
+                        if (parameterType.equals("java.util.Map")) {
+                            parameterType = "java.util.Map<K2,V2>";
+                            genericList.add("K2,V2");
+                        }
+                        if (!genericList.isEmpty()) {
+                            generic += "<" + String.join(",", genericList) + ">";
+                        }
+                        
                         String parameterName = "";
                         if ( ! parameterType.isEmpty() ) {
                             parameterName = "value";
@@ -400,6 +416,7 @@ public class SourceGenerator {
                         template.setSqlCommandType(streamReader.getName().toString());
                         template.setComment       (nodeComment  );
                         template.setMethodName    (id           );
+                        template.setGeneric       (generic      );
                         template.setReturnType    (resultType   );
                         template.setParameterType (parameterType);
                         template.setParameterName (parameterName);
@@ -416,13 +433,15 @@ public class SourceGenerator {
             String typeName    = namespace.substring(   namespace.lastIndexOf(".") + 1);
             
             Map<String, Object> root = new HashMap<String, Object>();
+            root.put("userName"      , Activator.getProperty("user.name"));
             root.put("programComment", namespaceComment   );
             root.put("packageName"   , packageName        );
             root.put("typeName"      , typeName           );
-            root.put("tableComment"  , ""                 );
             root.put("methodItems"   , methodTemplateList );
             
             String tmplSourceVo = Activator.getTemplateSource("mapper_interface.ftlh", root);
+            
+            tmplSourceVo = tmplSourceVo.replace("&lt;", "<").replace("&gt;", ">");
             
             sourceTemplate.setPackageName(packageName);
             sourceTemplate.setTypeName   (typeName   );
@@ -431,14 +450,6 @@ public class SourceGenerator {
         } catch (Exception e) {
             e.printStackTrace();
             Activator.console(e.toString());
-        } finally {
-            if (streamReader != null) {
-                try {
-                    streamReader.close();
-                } catch (XMLStreamException e) {
-                    e.printStackTrace();
-                }
-            }
         }
         
         return sourceTemplate;
@@ -453,7 +464,7 @@ public class SourceGenerator {
         return "";
     }
     
-    
+    // TODO - 표준화 이후 변경
     public static List<FieldTemplate> getMetaInfo(List<String> columnList) {
         
         List<FieldTemplate> resultList = new ArrayList<>();
@@ -476,8 +487,13 @@ public class SourceGenerator {
             
             try (Statement stmt = Activator.getConnection().createStatement();) {
                 
+                String endNumber  = column.trim();
                 String srchColumn = column.trim();
                 srchColumn        = srchColumn.replaceAll("\\d+$", "");  // 숫자로 끝나는 경우 제거
+                
+                
+                endNumber = endNumber.replace(srchColumn, "");
+                
                 srchColumn        = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, srchColumn);  // corpCode -> CORP_CODE
                 
                 String exeQuery = query.replace(":TERMS_PHYCS_NAME", srchColumn);
@@ -488,7 +504,7 @@ public class SourceGenerator {
                 TableValue tableValue = new TableValue();
                 if (rs.next()) {
                     tableValue.COLUMN_NAME        = rs.getString("TERMS_PHYCS_NAME" );
-                    tableValue.COLUMN_DESCRIPTION = rs.getString("TERMS_LOGIC_NAME" );
+                    tableValue.COLUMN_DESCRIPTION = rs.getString("TERMS_LOGIC_NAME" ) + "" + endNumber;
                     tableValue.TYPE               = rs.getString("DOMAIN_DATA_TYPE" );
                     tableValue.LENGTH             = rs.getString("DOMAIN_DATA_SIZE" );
                     tableValue.SCALE              = rs.getString("DOMAIN_DATA_SCALE");
@@ -539,47 +555,48 @@ public class SourceGenerator {
     
     
     public static void createDefaultDBIO(List<String> tableList, List<SourceTemplate> voList, List<SourceTemplate> mapperList) {
-     // https://mirwebma.tistory.com/181
+        // https://mirwebma.tistory.com/181
         List<String> queryList = new ArrayList<>();
-        queryList.add("SELECT D.COLORDER                 AS COLUMN_IDX            -- Column Index          ");
-        queryList.add("     , A.NAME                     AS TABLE_NAME            -- Table Name            ");
-        queryList.add("     , C.VALUE                    AS TABLE_DESCRIPTION     -- Table Description     ");
-        queryList.add("     , D.NAME                     AS COLUMN_NAME           -- Column Name           ");
-        queryList.add("     , E.VALUE                    AS COLUMN_DESCRIPTION    -- Column Description    ");
-        queryList.add("     , F.DATA_TYPE                AS TYPE                  -- Column Type           ");
-        queryList.add("     , F.CHARACTER_OCTET_LENGTH   AS LENGTH                -- Column Length         ");
-        queryList.add("     , F.NUMERIC_SCALE            AS SCALE                 -- Column SCALE          ");
-        queryList.add("     , F.IS_NULLABLE              AS IS_NULLABLE           -- Column Nullable       ");
-        queryList.add("     , F.COLLATION_NAME           AS COLLATION_NAME        -- Column Collaction Name");
-        queryList.add("     , ( SELECT COALESCE(MAX('PK'), '')                                             ");
-        queryList.add("           FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE                          ");
-        queryList.add("          WHERE TABLE_NAME = A.NAME                                                 ");
-        queryList.add("            AND CONSTRAINT_NAME = (                                                 ");
-        queryList.add("                SELECT CONSTRAINT_NAME                                              ");
-        queryList.add("                  FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                         ");
-        queryList.add("                 WHERE TABLE_NAME = A.NAME                                          ");
-        queryList.add("                   AND CONSTRAINT_TYPE = 'PRIMARY KEY'                              ");
-        queryList.add("                   AND COLUMN_NAME = D.NAME                                         ");
-        queryList.add("            )                                                                       ");
-        queryList.add("     ) AS IS_PRIMARYKEY                                                             ");
-        queryList.add("   FROM SYSOBJECTS A WITH (NOLOCK)                                                  ");
-        queryList.add("  INNER JOIN SYSUSERS B WITH (NOLOCK)          ON A.UID = B.UID                     ");
-        queryList.add("  INNER JOIN SYSCOLUMNS D WITH (NOLOCK)        ON D.ID = A.ID                       ");
-        queryList.add("  INNER JOIN INFORMATION_SCHEMA.COLUMNS F WITH (NOLOCK)                             ");
-        queryList.add("     ON A.NAME = F.TABLE_NAME                                                       ");
-        queryList.add("    AND D.NAME = F.COLUMN_NAME                                                      ");
-        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES C WITH (NOLOCK)                          ");
-        queryList.add("     ON C.MAJOR_ID = A.ID                                                           ");
-        queryList.add("    AND C.MINOR_ID = 0                                                              ");
-        queryList.add("    AND C.NAME = 'MS_Description'                                                   ");
-        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES E WITH (NOLOCK)                          ");
-        queryList.add("     ON E.MAJOR_ID = D.ID                                                           ");
-        queryList.add("    AND E.MINOR_ID = D.COLID                                                        ");
-        queryList.add("    AND E.NAME = 'MS_Description'                                                   ");
-        queryList.add("  WHERE 1=1                                                                         ");
-        queryList.add("    AND A.TYPE = 'U'                                                                ");
-        queryList.add("    AND A.NAME = ':TABLE_NAME'                                                      ");  // 바인딩
-        queryList.add("  ORDER BY D.COLORDER                                                               ");
+        queryList.add("SELECT D.COLORDER                 AS COLUMN_IDX            -- Column Index                           ");
+        queryList.add("     , A.NAME                     AS TABLE_NAME            -- Table Name                             ");
+        queryList.add("     , C.VALUE                    AS TABLE_DESCRIPTION     -- Table Description                      ");
+        queryList.add("     , D.NAME                     AS COLUMN_NAME           -- Column Name                            ");
+        queryList.add("     , E.VALUE                    AS COLUMN_DESCRIPTION    -- Column Description                     ");
+        queryList.add("     , F.DATA_TYPE                AS TYPE                  -- Column Type                            ");
+        queryList.add("     , F.CHARACTER_OCTET_LENGTH   AS LENGTH                -- Column Length                          ");
+        queryList.add("     , F.NUMERIC_SCALE            AS SCALE                 -- Column SCALE                           ");
+        queryList.add("     , F.IS_NULLABLE              AS IS_NULLABLE           -- Column Nullable                        ");
+        queryList.add("     , F.COLLATION_NAME           AS COLLATION_NAME        -- Column Collaction Name                 ");
+        queryList.add("     , ( SELECT COALESCE(MAX('Y'), 'N')                                                              ");
+        queryList.add("           FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE                                           ");
+        queryList.add("          WHERE TABLE_NAME = A.NAME                                                                  ");
+        queryList.add("            AND CONSTRAINT_NAME = (                                                                  ");
+        queryList.add("                SELECT CONSTRAINT_NAME                                                               ");
+        queryList.add("                  FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                                          ");
+        queryList.add("                 WHERE TABLE_NAME = A.NAME                                                           ");
+        queryList.add("                   AND CONSTRAINT_TYPE = 'PRIMARY KEY'                                               ");
+        queryList.add("                   AND COLUMN_NAME = D.NAME                                                          ");
+        queryList.add("            )                                                                                        ");
+        queryList.add("     ) AS PRIMARYKEY_YN                                                                              ");  // PK ""
+        queryList.add("     , CASE WHEN COLUMNPROPERTY(A.ID, D.NAME, 'isIdentity') = 1 THEN 'Y' ELSE 'N' END AS IDENTITY_YN ");  // 1 0
+        queryList.add("   FROM SYSOBJECTS A WITH (NOLOCK)                                                                   ");
+        queryList.add("  INNER JOIN SYSUSERS B WITH (NOLOCK)          ON A.UID = B.UID                                      ");
+        queryList.add("  INNER JOIN SYSCOLUMNS D WITH (NOLOCK)        ON D.ID = A.ID                                        ");
+        queryList.add("  INNER JOIN INFORMATION_SCHEMA.COLUMNS F WITH (NOLOCK)                                              ");
+        queryList.add("     ON A.NAME = F.TABLE_NAME                                                                        ");
+        queryList.add("    AND D.NAME = F.COLUMN_NAME                                                                       ");
+        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES C WITH (NOLOCK)                                           ");
+        queryList.add("     ON C.MAJOR_ID = A.ID                                                                            ");
+        queryList.add("    AND C.MINOR_ID = 0                                                                               ");
+        queryList.add("    AND C.NAME = 'MS_Description'                                                                    ");
+        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES E WITH (NOLOCK)                                           ");
+        queryList.add("     ON E.MAJOR_ID = D.ID                                                                            ");
+        queryList.add("    AND E.MINOR_ID = D.COLID                                                                         ");
+        queryList.add("    AND E.NAME = 'MS_Description'                                                                    ");
+        queryList.add("  WHERE 1=1                                                                                          ");
+        queryList.add("    AND A.TYPE = 'U'                                                                                 ");
+        queryList.add("    AND A.NAME = ':TABLE_NAME'                                                                       ");  // 바인딩
+        queryList.add("  ORDER BY D.COLORDER                                                                                ");
         
         String query = String.join("\n", queryList);
         
@@ -606,11 +623,12 @@ public class SourceGenerator {
                     tableValue.SCALE              = rs.getString("SCALE"             );
                     tableValue.IS_NULLABLE        = rs.getString("IS_NULLABLE"       );
                     tableValue.COLLATION_NAME     = rs.getString("COLLATION_NAME"    );
-                    tableValue.IS_PRIMARYKEY      = rs.getString("IS_PRIMARYKEY"     );
+                    tableValue.PRIMARYKEY_YN      = rs.getString("PRIMARYKEY_YN"     );
+                    tableValue.IDENTITY_YN        = rs.getString("IDENTITY_YN"       );
                     
                     // 자바관련
-                    tableValue.JAVA_TYPE       = getJavaType(tableValue);
-                    tableValue.JAVA_NAME       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
+                    tableValue.JAVA_TYPE = getJavaType(tableValue);
+                    tableValue.JAVA_NAME = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
                     
                     tableValueList.add(tableValue);
                 }
@@ -630,6 +648,7 @@ public class SourceGenerator {
                     
                     List<FieldTemplate> fieldList = getFieldMapping(tableValueList);
                     
+                    root.put("userName"    , Activator.getProperty("user.name"));
                     root.put("packageName" , bizPackage  );
                     root.put("typeName"    , tableName   );
                     root.put("tableComment", tableComment);
@@ -673,7 +692,6 @@ public class SourceGenerator {
         int maxColumnNameSpace = 0;
         int maxCommentSpace    = 0;
         
-        
         int maxPkNameSpace       = 0;
         int maxPkColumnNameSpace = 0;
         int maxPkCommentSpace    = 0;
@@ -689,7 +707,6 @@ public class SourceGenerator {
                 maxTypeSpace = tmpTypeSpace;
             }
             
-            
             if (maxNameSpace < tmpNameSpace) {
                 maxNameSpace = tmpNameSpace;
             }
@@ -702,9 +719,8 @@ public class SourceGenerator {
                 maxCommentSpace = tmpCommentSpace;
             }
             
-            
             // PK
-            if ("PK".equals(table.IS_PRIMARYKEY) ) {
+            if ("Y".equals(table.PRIMARYKEY_YN) ) {
             int tmpPkColumnNameSpace = table.COLUMN_NAME.length();
             int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
             int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;  // 영문 1, 한글 2
@@ -722,12 +738,14 @@ public class SourceGenerator {
             }
         }
         
+        // 삭제
         for(TableValue table : tableValueList) {
             FieldTemplate template = new FieldTemplate();
             
             template.setType      (table.JAVA_TYPE                                    );  // 타입
             template.setComment   (StringUtils.defaultString(table.COLUMN_DESCRIPTION));  // 설명
-            template.setPk        (table.IS_PRIMARYKEY                                );  // PK
+            template.setPkYn      (table.PRIMARYKEY_YN                                );  // PK
+            template.setIdentityYn(table.IDENTITY_YN                                  );
             template.setName      (table.JAVA_NAME                                    );  // 필드명
             template.setBindName  ("#{" + table.JAVA_NAME + "}"                       );  // 바인드_필드명
             template.setColumnName(table.COLUMN_NAME                                  );  // DB컬럼명
@@ -746,7 +764,7 @@ public class SourceGenerator {
             template.setCommentSpace   (makeSpace(maxCommentSpace    - tmpCommentSpace   ));  // 설명
             
             //PK - QUERY XML에서만 사용
-            if ("PK".equals(table.IS_PRIMARYKEY) ) {
+            if ("Y".equals(table.PRIMARYKEY_YN) ) {
                 int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
                 int tmpPkColumnNameSpace = table.COLUMN_NAME.length();
                 int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;
@@ -776,24 +794,34 @@ public class SourceGenerator {
         switch (table.TYPE.toLowerCase()) {
         case "decimal":
         case "numeric":
-            
             if ( "0".equals(table.SCALE) ) {
                 returnType = "Long";
             } else {
                 returnType = "java.math.BigDecimal";
             }
             break;
-
+        
+        case "int":
+            returnType = "Integer";
+            break;
+            
+        case "datetime":
+            returnType = "java.util.Date";
+            break;
+            
+        case "bigint":
         case "java.lang.long":
             returnType = "Long";
             break;
-        case "java.lang.string":
-            returnType = "String";
-            break;
+            
         case "java.lang.bigdecimal":
             returnType = "java.lang.BigDecimal";
             break;
-            
+        /*
+        case "":
+            returnType = "Object";
+            break;
+        */
         default:
             returnType = "String";
             break;
@@ -808,11 +836,16 @@ public class SourceGenerator {
         switch (table.TYPE.toLowerCase()) {
         case "decimal":
         case "numeric":
+        case "bigint":
         case "java.lang.long":
         case "java.lang.bigdecimal":
             returnType = "BIGDECIMAL";
             break;
 
+        case "datetime":
+            returnType = "DATETIME";
+            break;
+            
         default:
             returnType = "STRING";
             break;

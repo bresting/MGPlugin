@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 기본 샘플 Mapper -->
+<mapper namespace="tis.biz.xx.mapper.XX1000Mapper">
+
+    <!-- 기본샘플 목록 조회 -->
+    <select id="selectListBasSmpleIqry" parameterType="java.util.Map" >
+    SELECT /* tis.biz.xx.mapper.XX1000Mapper.selectList */
+           COMM_CD_ID         AS commCdId         /* 공통코드ID     */
+         , COMM_CD            AS commCd           /* 공통코드       */
+         , PROC_SN            AS procSn           /* 처리순번       */
+         , COMM_CD_NM         AS commCdNm         /* 공통코드명     */
+         , SORT_ORDR          AS sortOrdr         /* 정렬순서       */
+         , PRPDVS_RATE        AS prpdvsRate       /* 안분비율       */
+         , EXTRA_FIELD_CNTN01 AS extraFieldCntn01 /* 여분필드내용01 */
+         , EXTRA_FIELD_CNTN02 AS extraFieldCntn02 /* 여분필드내용02 */
+         , EXTRA_FIELD_CNTN03 AS extraFieldCntn03 /* 여분필드내용03 */
+         , FRST_REG_DTTM      AS frstRegDttm      /* 최초등록일시   */
+         , FRST_REG_ID        AS frstRegId        /* 최초등록ID     */
+         , LAST_PROC_DTTM     AS lastProcDttm     /* 최종처리일시   */
+         , LAST_PROC_ID       AS lastProcId       /* 최종처리ID     */
+      FROM TB_XX001M WITH(NOLOCK) /* 샘플테이블 */
+     WHERE 1 = 1
+       AND COMM_CD_ID LIKE #{commCdId} + '%' /* 공통코드ID */
+     ORDER BY COMM_CD_ID
+    </select>
+    
+    <!-- 기본샘플 목록 조회 -->
+    <select id="selectBasSmpleIqry" >
+    SELECT /* tis.biz.xx.mapper.XX1000Mapper.selectList */
+           COMM_CD_ID         AS commCdId         /* 공통코드ID     */
+         , COMM_CD            AS commCd           /* 공통코드       */
+         , PROC_SN            AS procSn           /* 처리순번       */
+         , COMM_CD_NM         AS commCdNm         /* 공통코드명     */
+         , SORT_ORDR          AS sortOrdr         /* 정렬순서       */
+         , PRPDVS_RATE        AS prpdvsRate       /* 안분비율       */
+         , EXTRA_FIELD_CNTN01 AS extraFieldCntn01 /* 여분필드내용01 */
+         , EXTRA_FIELD_CNTN02 AS extraFieldCntn02 /* 여분필드내용02 */
+         , EXTRA_FIELD_CNTN03 AS extraFieldCntn03 /* 여분필드내용03 */
+         , FRST_REG_DTTM      AS frstRegDttm      /* 최초등록일시   */
+         , FRST_REG_ID        AS frstRegId        /* 최초등록ID     */
+         , LAST_PROC_DTTM     AS lastProcDttm     /* 최종처리일시   */
+         , LAST_PROC_ID       AS lastProcId       /* 최종처리ID     */
+      FROM TB_XX001M WITH(NOLOCK) /* 샘플테이블 */
+     WHERE 1 = 1
+       AND COMM_CD_ID LIKE #{commCdId} + '%' /* 공통코드ID */
+     ORDER BY COMM_CD_ID
+    </select>    
+    
+    <!-- 공통코드 MYBATIS FOREACH -->
+    <select id="selectListMultipleCommCd" parameterType="tis.biz.xx.vo.XX1000MultipleCommCd" resultType="tis.biz.xx.vo.XX1000MultipleCommCd">
+    SELECT /* tis.biz.xx.mapper.XX1000Mapper.selectList */
+           COMM_CD_NM AS commCdNm /* 공통코드명   */
+      FROM TB_XX001M WITH(NOLOCK) /* 공통코드상세 */
+     WHERE 1 = 1
+       AND COMM_CD_ID IN
+        <foreach collection="commCdIdList" item="commCdId" open="(" close=")" separator=",">
+           #{commCdId}
+        </foreach>
+        
+       AND COMM_CD_ID IN
+        <foreach collection="commVo" item="type" open="(" close=")" separator=",">
+            #{type.commCdId}
+        </foreach>
+      ORDER BY COMM_CD_ID
+    </select>
+</mapper>

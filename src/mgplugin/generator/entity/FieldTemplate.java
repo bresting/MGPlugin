@@ -20,7 +20,8 @@ public class FieldTemplate {
     private String columnName;
     private String bindName;
     private String comment;
-    private String pk;
+    private String pkYn;
+    private String identityYn;
     
     private String nexaType;
     private String nexaSize;
@@ -95,17 +96,30 @@ public class FieldTemplate {
     public void setComment(String comment) {
         this.comment = comment;
     }
+    
     /**
-     * @return the pk
+     * @return the pkYn
      */
-    public String getPk() {
-        return pk;
+    public String getPkYn() {
+        return pkYn;
     }
     /**
-     * @param pk the pk to set
+     * @param pkYn the pkYn to set
      */
-    public void setPk(String pk) {
-        this.pk = pk;
+    public void setPkYn(String pkYn) {
+        this.pkYn = pkYn;
+    }
+    /**
+     * @return the identityYn
+     */
+    public String getIdentityYn() {
+        return identityYn;
+    }
+    /**
+     * @param identityYn the identityYn to set
+     */
+    public void setIdentityYn(String identityYn) {
+        this.identityYn = identityYn;
     }
     /**
      * @return the nameSpace
@@ -220,15 +234,20 @@ public class FieldTemplate {
      */
     @Override
     public String toString() {
-        return "FieldTemplate [name=" + name + ", type=" + type + ", columnName="
-                + columnName + ", bindName=" + bindName + ", comment=" + comment + ", pk=" + pk + ", nexaType="
+        return "FieldTemplate [name=" + name + ", type=" + type + ", columnName=" + columnName + ", bindName="
+                + bindName + ", comment=" + comment + ", pkYn=" + pkYn + ", identityYn=" + identityYn + ", nexaType="
                 + nexaType + ", nexaSize=" + nexaSize + ", typeSpace=" + typeSpace + ", nameSpace=" + nameSpace
                 + ", columnNameSpace=" + columnNameSpace + ", commentSpace=" + commentSpace + ", pkNameSpace="
-                + pkNameSpace + ", pkColumnNameSpace=" + pkColumnNameSpace + ", pkCommentSpace=" + pkCommentSpace + "]";
+                + pkNameSpace + ", pkColumnNameSpace=" + pkColumnNameSpace + ", pkCommentSpace=" + pkCommentSpace
+                + ", getName()=" + getName() + ", getType()=" + getType() + ", getColumnName()=" + getColumnName()
+                + ", getBindName()=" + getBindName() + ", getComment()=" + getComment() + ", getPkYn()=" + getPkYn()
+                + ", getIdentityYn()=" + getIdentityYn() + ", getNameSpace()=" + getNameSpace()
+                + ", getColumnNameSpace()=" + getColumnNameSpace() + ", getCommentSpace()=" + getCommentSpace()
+                + ", getTypeSpace()=" + getTypeSpace() + ", getPkNameSpace()=" + getPkNameSpace()
+                + ", getPkColumnNameSpace()=" + getPkColumnNameSpace() + ", getPkCommentSpace()=" + getPkCommentSpace()
+                + ", getNexaType()=" + getNexaType() + ", getNexaSize()=" + getNexaSize() + ", getClass()=" + getClass()
+                + ", hashCode()=" + hashCode() + ", toString()=" + super.toString() + "]";
     }
-    
-    
-    
     
     
     

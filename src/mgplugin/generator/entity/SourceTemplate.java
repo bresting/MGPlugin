@@ -81,6 +81,4 @@ public class SourceTemplate {
     public void setSource(String source) {
         this.source = source;
     }
-
-    
 }

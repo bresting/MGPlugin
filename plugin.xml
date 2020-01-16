@@ -114,5 +114,21 @@
             name="MG 기본 DBIO 생성기" >
       </view>
    </extension>
+   
+   <!-- ER MASTER -->
+   <extension
+         point="org.insightech.er.popupMenus">
+      <popupMenu
+            class="mgplugin.erd.ExportTableDDLActionFactory"
+            path="Export">
+      </popupMenu>
+   </extension>
 
+   <extension
+       point="org.insightech.er.popupMenus">
+      <popupMenu
+            class="mgplugin.erd.ImportMetaDataActionFactory"
+            path="Import">
+      </popupMenu>
+   </extension>
 </plugin>
