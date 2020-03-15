@@ -53,12 +53,13 @@ public class SourceGenerator {
     public static void main(String[] args) {
         
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
-        
+        /*
         // XML -> Interface
         SourceTemplate temp = SourceGenerator.mapperToInterface("C:\\eclipse_rcp\\workspace\\MGPlugin\\resources\\XX1000Mapper.xml");
         System.out.println(temp.getSource());
 
         // C:\eclipse_rcp\workspace\MgPlugin\resources\XX1000Mapper.xml
+        */
         
         /*
         // Query -> vo
@@ -70,22 +71,23 @@ public class SourceGenerator {
         System.out.println(inSourceTemplate.getSource());
         System.out.println("=========================");
         System.out.println(outSourceTemplate.getSource());
-         */
+        */
         
-        /*
+        
         // DBIO
         List<String> tableList = new ArrayList<>();
-        tableList.add("TB_XX001M");
+        tableList.add("CB2TB_BC701M");
         
         List<SourceTemplate> resultVoList        = new ArrayList<>();
         List<SourceTemplate> resultMapperList    = new ArrayList<>();
         
         SourceGenerator.createDefaultDBIO(tableList, resultVoList, resultMapperList);
         
-        System.out.println(resultMapperList.get(0).getSource());
-        */
+        if (!resultMapperList.isEmpty()) {
+            System.out.println(resultMapperList.get(0).getSource());
+        }
         Activator.closeThisPlugin();
-      
+        
     }
     
     public static void getQueryVoFields(XMLQuery query, SourceTemplate inSourceTemplate, SourceTemplate outSourceTemplate) {
@@ -93,15 +95,24 @@ public class SourceGenerator {
         List<String> inList  = getInputFields (query.getQuery());
         List<String> outList = getOutputFields(query.getQuery());
         
-        if (StringUtils.isEmpty(query.getParameterType() ) ) {
-            query.setParameterType("tis.EmptyType");
+        String paramPackageName = query.getParameterType();
+        String paramTypeName    = query.getParameterType();
+        
+        String resultPackageName = query.getResultType();
+        String resultTypeName    = query.getResultType();
+        
+        if ( query.getParameterType().contains(".") ) {
+            paramPackageName = query.getParameterType().substring(0, query.getParameterType().lastIndexOf(".")    );
+            paramTypeName    = query.getParameterType().substring(   query.getParameterType().lastIndexOf(".") + 1);
         }
         
-        if (StringUtils.isEmpty(query.getResultType() ) ) {
-            query.setResultType("tis.EmptyType");
+        if ( query.getResultType().contains(".") ) {
+            resultPackageName = query.getResultType().substring(0, query.getResultType().lastIndexOf(".")    );
+            resultTypeName    = query.getResultType().substring(   query.getResultType().lastIndexOf(".") + 1);
         }
         
         if ( query.getParameterType().equals(query.getResultType()) ) {
+            
             for (String tmp : outList) {
                 if (!inList.contains(tmp)) {
                     inList.add(tmp);
@@ -117,8 +128,8 @@ public class SourceGenerator {
             root.put("userName"   , Activator.getProperty("user.name")); 
             root.put("xmlFile"    , query.getFileName     ());
             root.put("queryId"    , query.getQueryId      ());
-            root.put("packageName", query.getParameterType().substring(0, query.getParameterType().lastIndexOf(".")    ) );
-            root.put("typeName"   , query.getParameterType().substring(   query.getParameterType().lastIndexOf(".") + 1) );
+            root.put("packageName", paramPackageName );
+            root.put("typeName"   , paramTypeName    );
             root.put("fieldItems" , result);
             
             String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
@@ -127,38 +138,38 @@ public class SourceGenerator {
             outSourceTemplate.setSource("입출력 같다.");
             
         } else {
-
-            if ( query.getParameterType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
-                /**
-                 * 입력
-                 */
+            
+            /**
+             * 입력
+             */
+            if (!StringUtils.isEmpty(query.getParameterType()) ) {
                 List<FieldTemplate> result = getMetaInfo(inList);
                 
                 Map<String, Object> root = new HashMap<String, Object>();
                 root.put("userName"   , Activator.getProperty("user.name"));
                 root.put("xmlFile"    , query.getFileName     ());
                 root.put("queryId"    , query.getQueryId      ());
-                root.put("packageName", query.getParameterType().substring(0, query.getParameterType().lastIndexOf(".")    ) );
-                root.put("typeName"   , query.getParameterType().substring(   query.getParameterType().lastIndexOf(".") + 1) );
+                root.put("packageName", paramPackageName );
+                root.put("typeName"   , paramTypeName );
                 root.put("fieldItems" , result);
                 
                 String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
                 
                 inSourceTemplate.setSource(tmplSourceVo);
             }
-            
-            if ( query.getResultType().startsWith( Activator.getProperty("project.rootPackage") ) ) {
-                /**
-                 * 결과
-                 */
+        
+            /**
+             * 결과
+             */
+            if (!StringUtils.isEmpty(query.getResultType()) ) {
                 List<FieldTemplate> result = getMetaInfo(outList);
                 
                 Map<String, Object> root = new HashMap<String, Object>();
                 root.put("userName"   , Activator.getProperty("user.name"));
                 root.put("xmlFile"    , query.getFileName     ());
                 root.put("queryId"    , query.getQueryId      ());
-                root.put("packageName", query.getResultType().substring(0, query.getResultType().lastIndexOf(".")    ) );
-                root.put("typeName"   , query.getResultType().substring(   query.getResultType().lastIndexOf(".") + 1) );
+                root.put("packageName", resultPackageName       );
+                root.put("typeName"   , resultTypeName          );
                 root.put("fieldItems" , result);
                 
                 String tmplSourceVo = Activator.getTemplateSource("query_vo.ftlh", root);
@@ -166,7 +177,6 @@ public class SourceGenerator {
             }
         }
     }
-    
     
     public static XMLQuery getQueryAtOffset(String filePath, int offset) {
         
@@ -478,8 +488,8 @@ public class SourceGenerator {
             queryList.add("     , B.DOMAIN_DATA_TYPE                      ");
             queryList.add("     , B.DOMAIN_DATA_SIZE                      ");
             queryList.add("     , B.DOMAIN_DATA_SCALE                     ");
-            queryList.add("  FROM TERMS_DIC  A                            ");
-            queryList.add("  JOIN DOMAIN_DIC B                            ");
+            queryList.add("  FROM METADB.DBO.TERMS_DIC  A                 ");
+            queryList.add("  JOIN METADB.DBO.DOMAIN_DIC B                 ");
             queryList.add("    ON A.DOMAIN_NAME      = B.DOMAIN_NAME      ");
             queryList.add(" WHERE A.TERMS_PHYCS_NAME = ':TERMS_PHYCS_NAME'");  // // 바인딩
             
@@ -490,7 +500,6 @@ public class SourceGenerator {
                 String endNumber  = column.trim();
                 String srchColumn = column.trim();
                 srchColumn        = srchColumn.replaceAll("\\d+$", "");  // 숫자로 끝나는 경우 제거
-                
                 
                 endNumber = endNumber.replace(srchColumn, "");
                 
@@ -509,7 +518,7 @@ public class SourceGenerator {
                     tableValue.LENGTH             = rs.getString("DOMAIN_DATA_SIZE" );
                     tableValue.SCALE              = rs.getString("DOMAIN_DATA_SCALE");
                 } else {
-                    column = column + "???";
+                    // column = column + "???";
                     tableValue.COLUMN_DESCRIPTION = "미 등록 용어입니다.";
                 }
                 
@@ -553,137 +562,181 @@ public class SourceGenerator {
         return resultList;
     }
     
-    
-    public static void createDefaultDBIO(List<String> tableList, List<SourceTemplate> voList, List<SourceTemplate> mapperList) {
-        // https://mirwebma.tistory.com/181
-        List<String> queryList = new ArrayList<>();
-        queryList.add("SELECT D.COLORDER                 AS COLUMN_IDX            -- Column Index                           ");
-        queryList.add("     , A.NAME                     AS TABLE_NAME            -- Table Name                             ");
-        queryList.add("     , C.VALUE                    AS TABLE_DESCRIPTION     -- Table Description                      ");
-        queryList.add("     , D.NAME                     AS COLUMN_NAME           -- Column Name                            ");
-        queryList.add("     , E.VALUE                    AS COLUMN_DESCRIPTION    -- Column Description                     ");
-        queryList.add("     , F.DATA_TYPE                AS TYPE                  -- Column Type                            ");
-        queryList.add("     , F.CHARACTER_OCTET_LENGTH   AS LENGTH                -- Column Length                          ");
-        queryList.add("     , F.NUMERIC_SCALE            AS SCALE                 -- Column SCALE                           ");
-        queryList.add("     , F.IS_NULLABLE              AS IS_NULLABLE           -- Column Nullable                        ");
-        queryList.add("     , F.COLLATION_NAME           AS COLLATION_NAME        -- Column Collaction Name                 ");
-        queryList.add("     , ( SELECT COALESCE(MAX('Y'), 'N')                                                              ");
-        queryList.add("           FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE                                           ");
-        queryList.add("          WHERE TABLE_NAME = A.NAME                                                                  ");
-        queryList.add("            AND CONSTRAINT_NAME = (                                                                  ");
-        queryList.add("                SELECT CONSTRAINT_NAME                                                               ");
-        queryList.add("                  FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                                          ");
-        queryList.add("                 WHERE TABLE_NAME = A.NAME                                                           ");
-        queryList.add("                   AND CONSTRAINT_TYPE = 'PRIMARY KEY'                                               ");
-        queryList.add("                   AND COLUMN_NAME = D.NAME                                                          ");
-        queryList.add("            )                                                                                        ");
-        queryList.add("     ) AS PRIMARYKEY_YN                                                                              ");  // PK ""
-        queryList.add("     , CASE WHEN COLUMNPROPERTY(A.ID, D.NAME, 'isIdentity') = 1 THEN 'Y' ELSE 'N' END AS IDENTITY_YN ");  // 1 0
-        queryList.add("   FROM SYSOBJECTS A WITH (NOLOCK)                                                                   ");
-        queryList.add("  INNER JOIN SYSUSERS B WITH (NOLOCK)          ON A.UID = B.UID                                      ");
-        queryList.add("  INNER JOIN SYSCOLUMNS D WITH (NOLOCK)        ON D.ID = A.ID                                        ");
-        queryList.add("  INNER JOIN INFORMATION_SCHEMA.COLUMNS F WITH (NOLOCK)                                              ");
-        queryList.add("     ON A.NAME = F.TABLE_NAME                                                                        ");
-        queryList.add("    AND D.NAME = F.COLUMN_NAME                                                                       ");
-        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES C WITH (NOLOCK)                                           ");
-        queryList.add("     ON C.MAJOR_ID = A.ID                                                                            ");
-        queryList.add("    AND C.MINOR_ID = 0                                                                               ");
-        queryList.add("    AND C.NAME = 'MS_Description'                                                                    ");
-        queryList.add("   LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES E WITH (NOLOCK)                                           ");
-        queryList.add("     ON E.MAJOR_ID = D.ID                                                                            ");
-        queryList.add("    AND E.MINOR_ID = D.COLID                                                                         ");
-        queryList.add("    AND E.NAME = 'MS_Description'                                                                    ");
-        queryList.add("  WHERE 1=1                                                                                          ");
-        queryList.add("    AND A.TYPE = 'U'                                                                                 ");
-        queryList.add("    AND A.NAME = ':TABLE_NAME'                                                                       ");  // 바인딩
-        queryList.add("  ORDER BY D.COLORDER                                                                                ");
-        
-        String query = String.join("\n", queryList);
+    private static List<TableValue> getTableValue(String table) {
+
+        List<TableValue> tableValueList = new ArrayList<>();
         
         try (Statement stmt = Activator.getConnection().createStatement();) {
+            Map<String, Object> descRoot = new HashMap<String, Object>();
+            descRoot.put("tableName", table);
             
-            for (String table : tableList ) {
+            String descQuery = Activator.getTemplateSource("desc_query.ftlh", descRoot);
+            
+            ResultSet rs = stmt.executeQuery(descQuery);
+            
+            while (rs.next()) {
+                TableValue tableValue = new TableValue();
+                tableValue.COLUMN_IDX         = rs.getString("COLUMN_IDX"        );
+                tableValue.TABLE_NAME         = rs.getString("TABLE_NAME"        );
+                tableValue.TABLE_DESCRIPTION  = rs.getString("TABLE_DESCRIPTION" );
+                tableValue.COLUMN_NAME        = rs.getString("COLUMN_NAME"       );
+                tableValue.COLUMN_DESCRIPTION = rs.getString("COLUMN_DESCRIPTION");
+                tableValue.TYPE               = rs.getString("TYPE"              );
+                tableValue.LENGTH             = rs.getString("LENGTH"            );
+                tableValue.SCALE              = rs.getString("SCALE"             );
+                tableValue.IS_NULLABLE        = rs.getString("IS_NULLABLE"       );
+                tableValue.COLLATION_NAME     = rs.getString("COLLATION_NAME"    );
+                tableValue.PRIMARYKEY_YN      = rs.getString("PRIMARYKEY_YN"     );
+                tableValue.IDENTITY_YN        = rs.getString("IDENTITY_YN"       );
                 
-                table = table.trim();
+                // 자바관련
+                tableValue.JAVA_TYPE = getJavaType(tableValue);
+                tableValue.JAVA_NAME = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
                 
-                String exeQuery = query.replace(":TABLE_NAME", table);
-                
-                ResultSet rs = stmt.executeQuery(exeQuery);
-                
-                List<TableValue> tableValueList = new ArrayList<>();
-                while (rs.next()) {
-                    TableValue tableValue = new TableValue();
-                    tableValue.COLUMN_IDX         = rs.getString("COLUMN_IDX"        );
-                    tableValue.TABLE_NAME         = rs.getString("TABLE_NAME"        );
-                    tableValue.TABLE_DESCRIPTION  = rs.getString("TABLE_DESCRIPTION" );
-                    tableValue.COLUMN_NAME        = rs.getString("COLUMN_NAME"       );
-                    tableValue.COLUMN_DESCRIPTION = rs.getString("COLUMN_DESCRIPTION");
-                    tableValue.TYPE               = rs.getString("TYPE"              );
-                    tableValue.LENGTH             = rs.getString("LENGTH"            );
-                    tableValue.SCALE              = rs.getString("SCALE"             );
-                    tableValue.IS_NULLABLE        = rs.getString("IS_NULLABLE"       );
-                    tableValue.COLLATION_NAME     = rs.getString("COLLATION_NAME"    );
-                    tableValue.PRIMARYKEY_YN      = rs.getString("PRIMARYKEY_YN"     );
-                    tableValue.IDENTITY_YN        = rs.getString("IDENTITY_YN"       );
-                    
-                    // 자바관련
-                    tableValue.JAVA_TYPE = getJavaType(tableValue);
-                    tableValue.JAVA_NAME = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tableValue.COLUMN_NAME);
-                    
-                    tableValueList.add(tableValue);
-                }
-                
-                // 테이블
-                if (tableValueList.isEmpty()) {
-                    Activator.console(table + " 테이블 정보를 DB에서 찾지 못했습니다. 테이블이 존재 하는지 확인하세요.");
-                } else {
-                    
-                    // ROOT
-                    String tableName    = tableValueList.get(0).TABLE_NAME;
-                    String tableComment = StringUtils.defaultString( tableValueList.get(0).TABLE_DESCRIPTION);
-                    String bizPackage   = Activator.getProperty("project.rootPackage") + ".dbio.";
-                    bizPackage         += tableName.substring(tableName.indexOf("_") + 1, tableName.indexOf("_") + 3).toLowerCase();  // TB_[BC]001M -> bc
-                    
-                    Map<String, Object> root = new HashMap<String, Object>();
-                    
-                    List<FieldTemplate> fieldList = getFieldMapping(tableValueList);
-                    
-                    root.put("userName"    , Activator.getProperty("user.name"));
-                    root.put("packageName" , bizPackage  );
-                    root.put("typeName"    , tableName   );
-                    root.put("tableComment", tableComment);
-                    root.put("fieldItems"  , fieldList   );
-                    
-                    String tmplSourceVo     = Activator.getTemplateSource("dbio_vo.ftlh"   , root);
-                    String tmplSourceMapper = Activator.getTemplateSource("mapper_xml.ftlh", root);
-                    
-                    // vo
-                    SourceTemplate sourceTemplateVo = new SourceTemplate();
-                    sourceTemplateVo.setPackageName (bizPackage  );
-                    sourceTemplateVo.setTypeName    (tableName   );
-                    sourceTemplateVo.setTableComment(tableComment);
-                    sourceTemplateVo.setSource      (tmplSourceVo);
-                    
-                    // mapper
-                    SourceTemplate sourceTemplateMapper = new SourceTemplate();
-                    sourceTemplateMapper.setPackageName (bizPackage  );
-                    sourceTemplateMapper.setTypeName    (tableName   );
-                    sourceTemplateMapper.setTableComment(tableComment);
-                    sourceTemplateMapper.setSource      (tmplSourceMapper);
-                    
-                    // 추가
-                    voList.add    (sourceTemplateVo    );
-                    mapperList.add(sourceTemplateMapper);
-                }
+                tableValueList.add(tableValue);
             }
-        } catch (SQLException | UnsupportedEncodingException e) {
+            
+            if (tableValueList.isEmpty()) {
+                Activator.console(table + " 테이블 정보를 DB에서 찾지 못했습니다. 테이블이 존재 하는지 확인하세요.");
+                Activator.console(descQuery);
+                Activator.console("");
+            }
+            
+        } catch (SQLException e) {
             e.printStackTrace();
             Activator.console(e.toString());
         }
+        
+        return tableValueList;
     }
     
+    public static List<String> createDefaultQuery(List<String> tableList) {
+        
+        List<String> outList = new ArrayList<>();
+        for (String table : tableList ) {
+            
+            List<TableValue> tableValueList = getTableValue(table.trim());
+            
+            // 테이블
+            if (tableValueList.isEmpty()) {
+                continue;
+            }
+            
+            String tableName    = tableValueList.get(0).TABLE_NAME;
+            String tableComment = StringUtils.defaultString( tableValueList.get(0).TABLE_DESCRIPTION);
+            
+            Map<String, Object> root = new HashMap<String, Object>();
+            
+            List<FieldTemplate> fieldList = getFieldMapping(tableValueList);
+            
+            root.put("typeName"    , tableName   );
+            root.put("tableComment", tableComment);
+            root.put("fieldItems"  , fieldList   );
+            
+            String tmplSource = Activator.getTemplateSource("mapper_xml_cosole.ftlh", root);
+            
+            outList.add(tmplSource);
+        }
+        
+        return outList;
+    }
     
-    public static List<FieldTemplate> getFieldMapping(List<TableValue> tableValueList) throws UnsupportedEncodingException {
+    public static List<String> createDefaultVo(List<String> tableList) {
+        
+        List<String> outList = new ArrayList<>();
+        for (String table : tableList ) {
+            
+            List<TableValue> tableValueList = getTableValue(table.trim());
+            
+            // 테이블
+            if (tableValueList.isEmpty()) {
+                continue;
+            }
+            
+            String tableName    = tableValueList.get(0).TABLE_NAME;
+            String tableComment = StringUtils.defaultString( tableValueList.get(0).TABLE_DESCRIPTION);
+            
+            Map<String, Object> root = new HashMap<String, Object>();
+            
+            List<FieldTemplate> fieldList = getFieldMapping(tableValueList);
+            
+            root.put("typeName"    , tableName   );
+            root.put("tableComment", tableComment);
+            root.put("fieldItems"  , fieldList   );
+            
+            String tmplSource = Activator.getTemplateSource("table_vo.ftlh", root);
+            
+            outList.add(tmplSource);
+        }
+        
+        return outList;
+    }
+    
+    public static void createDefaultDBIO(List<String> tableList, List<SourceTemplate> voList, List<SourceTemplate> mapperList) {
+        
+        for (String table : tableList ) {
+            
+            List<TableValue> tableValueList = getTableValue(table.trim());
+            
+            // 테이블
+            if (tableValueList.isEmpty()) {
+                continue;
+            }
+            
+            // ROOT
+            String tableName    = tableValueList.get(0).TABLE_NAME;
+            String tableComment = StringUtils.defaultString( tableValueList.get(0).TABLE_DESCRIPTION);
+            
+            // JAVA 파일 위치 - tis.biz.[업무영역].dbio
+            String bizPackage = Activator.getProperty("project.rootPackage") + ".biz.";
+            bizPackage       += tableName.substring(tableName.indexOf("TB_") + 3, tableName.indexOf("TB_") + 5).toLowerCase();  // TB_[BC]001M -> bc
+            bizPackage       += ".dbio";
+            
+            // XML 파일 위치  - tis.dbio.[업무영역]
+            String resourceDir ="mybatis\\dbio\\";
+            resourceDir       += tableName.substring(tableName.indexOf("TB_") + 3, tableName.indexOf("TB_") + 5).toLowerCase();  // TB_[BC]001M -> bc
+            
+            // XXX - VF 휴양시설 영역 다름
+            if ( tableName.contains("TB_VF") ) {
+                bizPackage  = Activator.getProperty("project.rootPackage") + ".externaldb.web";
+                resourceDir = "mybatis\\externaldb\\web\\";
+            }
+            
+            Map<String, Object> root = new HashMap<String, Object>();
+            
+            List<FieldTemplate> fieldList = getFieldMapping(tableValueList);
+            
+            root.put("userName"    , Activator.getProperty("user.name"));
+            root.put("packageName" , bizPackage  );
+            root.put("typeName"    , tableName   );
+            root.put("tableComment", tableComment);
+            root.put("fieldItems"  , fieldList   );
+            
+            String tmplSourceVo     = Activator.getTemplateSource("dbio_vo.ftlh"   , root);
+            String tmplSourceMapper = Activator.getTemplateSource("mapper_xml.ftlh", root);
+            
+            // vo
+            SourceTemplate sourceTemplateVo = new SourceTemplate();
+            sourceTemplateVo.setPackageName (bizPackage  );
+            sourceTemplateVo.setTypeName    (tableName   );
+            sourceTemplateVo.setTableComment(tableComment);
+            sourceTemplateVo.setSource      (tmplSourceVo);
+            
+            // mapper
+            SourceTemplate sourceTemplateMapper = new SourceTemplate();
+            sourceTemplateMapper.setPackageName (resourceDir );
+            sourceTemplateMapper.setTypeName    (tableName   );
+            sourceTemplateMapper.setTableComment(tableComment);
+            sourceTemplateMapper.setSource      (tmplSourceMapper);
+            
+            // 추가
+            voList.add    (sourceTemplateVo    );
+            mapperList.add(sourceTemplateMapper);
+            
+        }
+    }
+    
+    public static List<FieldTemplate> getFieldMapping(List<TableValue> tableValueList) {
         
         List<FieldTemplate> fieldList = new ArrayList<>();
         
@@ -696,85 +749,91 @@ public class SourceGenerator {
         int maxPkColumnNameSpace = 0;
         int maxPkCommentSpace    = 0;
         
-        for(TableValue table : tableValueList) {
-            
-            int tmpTypeSpace       = table.JAVA_TYPE.length();
-            int tmpColumnNameSpace = table.COLUMN_NAME.length();
-            int tmpNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
-            int tmpCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;  // 영문 1, 한글 2
-
-            if (maxTypeSpace < tmpTypeSpace) {
-                maxTypeSpace = tmpTypeSpace;
-            }
-            
-            if (maxNameSpace < tmpNameSpace) {
-                maxNameSpace = tmpNameSpace;
-            }
-            
-            if (maxColumnNameSpace < tmpColumnNameSpace) {
-                maxColumnNameSpace = tmpColumnNameSpace;
-            }
-            
-            if (maxCommentSpace < tmpCommentSpace) {
-                maxCommentSpace = tmpCommentSpace;
-            }
-            
-            // PK
-            if ("Y".equals(table.PRIMARYKEY_YN) ) {
-            int tmpPkColumnNameSpace = table.COLUMN_NAME.length();
-            int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
-            int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;  // 영문 1, 한글 2
-                if (maxPkNameSpace < tmpPkNameSpace) {
-                    maxPkNameSpace = tmpPkNameSpace;
+        try {
+            for(TableValue table : tableValueList) {
+                
+                int tmpTypeSpace       = table.JAVA_TYPE.length();
+                int tmpColumnNameSpace = table.COLUMN_NAME.length();
+                int tmpNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
+                int tmpCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;  // 영문 1, 한글 2
+    
+                if (maxTypeSpace < tmpTypeSpace) {
+                    maxTypeSpace = tmpTypeSpace;
                 }
                 
-                if (maxPkColumnNameSpace < tmpPkColumnNameSpace) {
-                    maxPkColumnNameSpace = tmpPkColumnNameSpace;
+                if (maxNameSpace < tmpNameSpace) {
+                    maxNameSpace = tmpNameSpace;
                 }
                 
-                if (maxPkCommentSpace < tmpPkCommentSpace) {
-                    maxPkCommentSpace = tmpPkCommentSpace;
+                if (maxColumnNameSpace < tmpColumnNameSpace) {
+                    maxColumnNameSpace = tmpColumnNameSpace;
                 }
-            }
-        }
-        
-        // 삭제
-        for(TableValue table : tableValueList) {
-            FieldTemplate template = new FieldTemplate();
-            
-            template.setType      (table.JAVA_TYPE                                    );  // 타입
-            template.setComment   (StringUtils.defaultString(table.COLUMN_DESCRIPTION));  // 설명
-            template.setPkYn      (table.PRIMARYKEY_YN                                );  // PK
-            template.setIdentityYn(table.IDENTITY_YN                                  );
-            template.setName      (table.JAVA_NAME                                    );  // 필드명
-            template.setBindName  ("#{" + table.JAVA_NAME + "}"                       );  // 바인드_필드명
-            template.setColumnName(table.COLUMN_NAME                                  );  // DB컬럼명
-            
-            template.setNexaType  (getNexaType(table)                                 );
-            
-            // SPACE 영역
-            int tmpTypeSpace       = table.JAVA_TYPE.length();
-            int tmpNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
-            int tmpColumnNameSpace = table.COLUMN_NAME.length();
-            int tmpCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;
-            
-            template.setTypeSpace      (makeSpace(maxTypeSpace       - tmpTypeSpace      ));  // 타입
-            template.setNameSpace      (makeSpace(maxNameSpace       - tmpNameSpace      ));  // 필드명
-            template.setColumnNameSpace(makeSpace(maxColumnNameSpace - tmpColumnNameSpace));  // 컬럼(필드명)
-            template.setCommentSpace   (makeSpace(maxCommentSpace    - tmpCommentSpace   ));  // 설명
-            
-            //PK - QUERY XML에서만 사용
-            if ("Y".equals(table.PRIMARYKEY_YN) ) {
-                int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
+                
+                if (maxCommentSpace < tmpCommentSpace) {
+                    maxCommentSpace = tmpCommentSpace;
+                }
+                
+                // PK
+                if ("Y".equals(table.PRIMARYKEY_YN) ) {
                 int tmpPkColumnNameSpace = table.COLUMN_NAME.length();
-                int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;
-                
-                template.setPkNameSpace      (makeSpace(maxPkNameSpace       - tmpPkNameSpace      ));  // 필드명
-                template.setPkColumnNameSpace(makeSpace(maxPkColumnNameSpace - tmpPkColumnNameSpace));  // 컬럼(필드명)
-                template.setPkCommentSpace   (makeSpace(maxPkCommentSpace    - tmpPkCommentSpace   ));  // 설명
+                int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
+                int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;  // 영문 1, 한글 2
+                    if (maxPkNameSpace < tmpPkNameSpace) {
+                        maxPkNameSpace = tmpPkNameSpace;
+                    }
+                    
+                    if (maxPkColumnNameSpace < tmpPkColumnNameSpace) {
+                        maxPkColumnNameSpace = tmpPkColumnNameSpace;
+                    }
+                    
+                    if (maxPkCommentSpace < tmpPkCommentSpace) {
+                        maxPkCommentSpace = tmpPkCommentSpace;
+                    }
+                }
             }
             
-            fieldList.add(template);
+            // 삭제
+            for(TableValue table : tableValueList) {
+                FieldTemplate template = new FieldTemplate();
+                
+                template.setType      (table.JAVA_TYPE                                    );  // 타입
+                template.setComment   (StringUtils.defaultString(table.COLUMN_DESCRIPTION));  // 설명
+                template.setPkYn      (table.PRIMARYKEY_YN                                );  // PK
+                template.setIdentityYn(table.IDENTITY_YN                                  );
+                template.setName      (table.JAVA_NAME                                    );  // 필드명
+                template.setBindName  ("#{" + table.JAVA_NAME + "}"                       );  // 바인드_필드명
+                template.setColumnName(table.COLUMN_NAME                                  );  // DB컬럼명
+                
+                template.setNexaType  (getNexaType(table)                                 );
+                
+                // SPACE 영역
+                int tmpTypeSpace       = table.JAVA_TYPE.length();
+                int tmpNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
+                int tmpColumnNameSpace = table.COLUMN_NAME.length();
+                int tmpCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;
+                
+                template.setTypeSpace      (makeSpace(maxTypeSpace       - tmpTypeSpace      ));  // 타입
+                template.setNameSpace      (makeSpace(maxNameSpace       - tmpNameSpace      ));  // 필드명
+                template.setColumnNameSpace(makeSpace(maxColumnNameSpace - tmpColumnNameSpace));  // 컬럼(필드명)
+                template.setCommentSpace   (makeSpace(maxCommentSpace    - tmpCommentSpace   ));  // 설명
+                
+                //PK - QUERY XML에서만 사용
+                if ("Y".equals(table.PRIMARYKEY_YN) ) {
+                    int tmpPkNameSpace       = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, table.COLUMN_NAME).length();
+                    int tmpPkColumnNameSpace = table.COLUMN_NAME.length();
+                    int tmpPkCommentSpace    = StringUtils.defaultString(table.COLUMN_DESCRIPTION).getBytes("MS949").length;
+                    
+                    template.setPkNameSpace      (makeSpace(maxPkNameSpace       - tmpPkNameSpace      ));  // 필드명
+                    template.setPkColumnNameSpace(makeSpace(maxPkColumnNameSpace - tmpPkColumnNameSpace));  // 컬럼(필드명)
+                    template.setPkCommentSpace   (makeSpace(maxPkCommentSpace    - tmpPkCommentSpace   ));  // 설명
+                }
+                
+                fieldList.add(template);
+            }
+            
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            Activator.console(e.toString());
         }
         
         return fieldList;
@@ -853,4 +912,48 @@ public class SourceGenerator {
         
         return returnType;
     }
+    
+    // https://mirwebma.tistory.com/181
+/*
+SELECT D.COLORDER                 AS COLUMN_IDX            -- Column Index                           
+ , A.NAME                     AS TABLE_NAME            -- Table Name                             
+ , C.VALUE                    AS TABLE_DESCRIPTION     -- Table Description                      
+ , D.NAME                     AS COLUMN_NAME           -- Column Name                            
+ , E.VALUE                    AS COLUMN_DESCRIPTION    -- Column Description                     
+ , F.DATA_TYPE                AS TYPE                  -- Column Type                            
+ , F.CHARACTER_OCTET_LENGTH   AS LENGTH                -- Column Length                          
+ , F.NUMERIC_SCALE            AS SCALE                 -- Column SCALE                           
+ , F.IS_NULLABLE              AS IS_NULLABLE           -- Column Nullable                        
+ , F.COLLATION_NAME           AS COLLATION_NAME        -- Column Collaction Name                 
+ , ( SELECT COALESCE(MAX('Y'), 'N')                                                              
+       FROM [:DB_NAME].INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE                                
+      WHERE TABLE_NAME = A.NAME                                                                  
+        AND CONSTRAINT_NAME = (                                                                  
+            SELECT CONSTRAINT_NAME                                                               
+              FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                                          
+             WHERE TABLE_NAME = A.NAME                                                           
+               AND CONSTRAINT_TYPE = 'PRIMARY KEY'                                               
+               AND COLUMN_NAME = D.NAME                                                          
+        )                                                                                        
+ ) AS PRIMARYKEY_YN                                                                              
+ , CASE WHEN COLUMNPROPERTY(A.ID, D.NAME, 'isIdentity') = 1 THEN 'Y' ELSE 'N' END AS IDENTITY_YN 
+FROM SYSOBJECTS A WITH (NOLOCK)                                                                   
+INNER JOIN SYSUSERS B WITH (NOLOCK)          ON A.UID = B.UID                                      
+INNER JOIN SYSCOLUMNS D WITH (NOLOCK)        ON D.ID = A.ID                                        
+INNER JOIN INFORMATION_SCHEMA.COLUMNS F WITH (NOLOCK)                                              
+ ON A.NAME = F.TABLE_NAME                                                                        
+AND D.NAME = F.COLUMN_NAME                                                                       
+LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES C WITH (NOLOCK)                                           
+ ON C.MAJOR_ID = A.ID                                                                            
+AND C.MINOR_ID = 0                                                                               
+AND C.NAME = 'MS_Description'                                                                    
+LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES E WITH (NOLOCK)                                           
+ ON E.MAJOR_ID = D.ID                                                                            
+AND E.MINOR_ID = D.COLID                                                                         
+AND E.NAME = 'MS_Description'                                                                    
+WHERE 1=1                                                                                          
+AND A.TYPE = 'U'                                                                                 
+AND A.NAME = ':TABLE_NAME'                                                                       
+ORDER BY D.COLORDER                                                                                
+*/
 }

@@ -65,7 +65,7 @@ public class XMLToJavaGenHandler extends AbstractHandler {
                 targetDir.mkdirs();
             }
             
-            // 대상파일
+            // 대상파일 TB_BC001MMapper.java
             File targetFile = new File(srcPath, sourceTemplate.getTypeName() + ".java");
             
             try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {

@@ -30,8 +30,6 @@ import org.eclipse.wb.swt.ResourceManager;
 import mgplugin.Activator;
 import mgplugin.generator.SourceGenerator;
 import mgplugin.generator.entity.SourceTemplate;
-import mgplugin.generator.entity.TableValue;
-import mgplugin.query.QueryExec;
 
 /**
  * <pre>
@@ -66,12 +64,12 @@ public class DBIOGenView extends ViewPart {
         parent.setLayout(new FormLayout());
         textDBIO = new Text(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
         FormData fd_textDBIO = new FormData();
-        fd_textDBIO.right = new FormAttachment(0, 260);
+        fd_textDBIO.right = new FormAttachment(0, 196);
         fd_textDBIO.left = new FormAttachment(0, 10);
         textDBIO.setLayoutData(fd_textDBIO);
         
         Button btnCreateDBIO = new Button(parent, SWT.NONE);
-        fd_textDBIO.bottom = new FormAttachment(btnCreateDBIO, -6);
+        btnCreateDBIO.setVisible(false);
         btnCreateDBIO.addSelectionListener(new SelectionAdapter() {
             
             @Override
@@ -91,7 +89,7 @@ public class DBIOGenView extends ViewPart {
                 
                 List<String> tableList = Arrays.asList(value.split("\n"));
                 int tableCnt = tableList.size();
-                boolean result = MessageDialog.openQuestion(parent.getShell(),"기본DBIO 생성", tableCnt+ "건 생성[tis.dbio..테이블] 하시겠습니까?\n\n파일 존재하는 경우 덮어쓰게 됩니다.");
+                boolean result = MessageDialog.openQuestion(parent.getShell(),"기본DBIO 생성", tableCnt+ "건 생성[tis.biz..dbio테이블] 하시겠습니까?\n\n파일 존재하는 경우 덮어쓰게 됩니다.");
                 if (result) {
                     
                     List<SourceTemplate> resultVoList     = new ArrayList<>();
@@ -105,6 +103,7 @@ public class DBIOGenView extends ViewPart {
                      */
                     for (SourceTemplate sourceTemplate : resultVoList) {
                         String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
+                        
                         srcPath       += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
                         srcPath       += "\\" + Activator.getProperty("project.sourcePath");
                         srcPath       += "\\" + sourceTemplate.getPackageName().replace(".", "\\");
@@ -132,12 +131,12 @@ public class DBIOGenView extends ViewPart {
                      */
                     for (SourceTemplate sourceTemplate : resultMapperList) {
                         // tis.xxx.xxx -> mybatis\xxx\xxx
-                        String mapperPath = sourceTemplate.getPackageName().replace(Activator.getProperty("project.rootPackage") + ".", "mybatis.").replace(".", "\\");
+                        //String mapperPath = sourceTemplate.getPackageName().replace(Activator.getProperty("project.rootPackage") + ".", "mybatis.").replace(".", "\\");
                         
                         String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
                         srcPath       += "\\" + Activator.getProperty("project.name"        );                               // 프로젝트명
                         srcPath       += "\\" + Activator.getProperty("project.resourcePath");
-                        srcPath       += "\\" + mapperPath;
+                        srcPath       += "\\" + sourceTemplate.getPackageName();                                             // mybatis/xxx/xxx
                         
                         // 디렉토리 없는 경우 생성
                         File targetDir = new File(srcPath);
@@ -164,7 +163,7 @@ public class DBIOGenView extends ViewPart {
                         srcPath  = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
                         srcPath += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
                         srcPath += "\\" + Activator.getProperty("project.sourcePath");
-                        srcPath += "\\" + sourceTemplate.getPackageName().replace(".", "\\");
+                        srcPath += "\\" + interfaceSourceTemplate.getPackageName().replace(".", "\\");
                         
                         // 디렉토리 없는 경우 생성
                         targetDir = new File(srcPath);
@@ -191,33 +190,30 @@ public class DBIOGenView extends ViewPart {
         
         FormData fd_btnCreateDBIO = new FormData();
         fd_btnCreateDBIO.bottom = new FormAttachment(100, -10);
-        fd_btnCreateDBIO.left = new FormAttachment(0, 10);
-        fd_btnCreateDBIO.top = new FormAttachment(100, -35);
         btnCreateDBIO.setLayoutData(fd_btnCreateDBIO);
-        btnCreateDBIO.setText("기본 DBIO생성");
+        btnCreateDBIO.setText("기본 DBIO파일생성");
         
         lblConnStatus = new Label(parent, SWT.NONE);
         fd_textDBIO.top = new FormAttachment(lblConnStatus, 6);
         FormData fd_lblConnStatus = new FormData();
-        fd_lblConnStatus.left = new FormAttachment(0, 10);
-        fd_lblConnStatus.top = new FormAttachment(0, 10);
         lblConnStatus.setLayoutData(fd_lblConnStatus);
         lblConnStatus.setText("DB...");
         
         Label label = new Label(parent, SWT.NONE);
         FormData fd_label = new FormData();
-        fd_label.top = new FormAttachment(lblConnStatus, 6);
+        fd_label.top = new FormAttachment(0, 31);
         fd_label.left = new FormAttachment(0, 10);
         label.setLayoutData(fd_label);
         
         Composite composite = new Composite(parent, SWT.NONE);
+        fd_btnCreateDBIO.top = new FormAttachment(composite, 6);
+        fd_btnCreateDBIO.right = new FormAttachment(composite, 0, SWT.RIGHT);
         FillLayout fl_composite = new FillLayout(SWT.HORIZONTAL);
         fl_composite.spacing = 10;
         composite.setLayout(fl_composite);
         FormData fd_composite = new FormData();
-        fd_composite.right = new FormAttachment(100, -10);
+        fd_composite.bottom = new FormAttachment(textDBIO, 0, SWT.BOTTOM);
         fd_composite.left = new FormAttachment(textDBIO, 6);
-        fd_composite.bottom = new FormAttachment(100, -41);
         fd_composite.top = new FormAttachment(0, 31);
         composite.setLayoutData(fd_composite);
         
@@ -240,6 +236,8 @@ public class DBIOGenView extends ViewPart {
         btnNewButton.setText("지우기");
         
         Button btnNewButton_1 = new Button(parent, SWT.NONE);
+        fd_composite.right = new FormAttachment(btnNewButton_1, 0, SWT.RIGHT);
+        fd_lblConnStatus.top = new FormAttachment(btnNewButton_1, 6, SWT.TOP);
         btnNewButton_1.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -248,16 +246,83 @@ public class DBIOGenView extends ViewPart {
         });
         btnNewButton_1.setImage(ResourceManager.getPluginImage("org.eclipse.ui.console", "/icons/full/eview16/console_view.png"));
         FormData fd_btnNewButton_1 = new FormData();
-        fd_btnNewButton_1.top = new FormAttachment(lblConnStatus, -6, SWT.TOP);
+        fd_btnNewButton_1.top = new FormAttachment(0, 4);
         fd_btnNewButton_1.right = new FormAttachment(100, -10);
         btnNewButton_1.setLayoutData(fd_btnNewButton_1);
         btnNewButton_1.setText("콘솔");
         
+        Label lblVersion = new Label(parent, SWT.NONE);
+        fd_lblConnStatus.left = new FormAttachment(lblVersion, 22);
+        FormData fd_lblVersion = new FormData();
+        fd_lblVersion.bottom = new FormAttachment(textDBIO, -6);
+        fd_lblVersion.left = new FormAttachment(0, 10);
+        lblVersion.setLayoutData(fd_lblVersion);
+        lblVersion.setText(Activator.VERSION);
+        
+        Button btnQuery = new Button(parent, SWT.NONE);
+        fd_textDBIO.bottom = new FormAttachment(100, -41);
+        btnQuery.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                
+                if ( Activator.getConnection() == null) {
+                    MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
+                    return;
+                }
+                
+                // 테이블 목록
+                String value = textDBIO.getText().trim();
+                if (StringUtils.isEmpty(value)) {
+                    MessageDialog.openInformation(parent.getShell(), "확인", "대상이 없습니다.");
+                    return;
+                }
+                
+                List<String> tableList = Arrays.asList(value.split("\n"));
+                List<String> resultList = SourceGenerator.createDefaultQuery(tableList);
+                
+                textParameter.setText(String.join("\n", resultList));
+            }
+        });
+        
+        FormData fd_btnQuery = new FormData();
+        fd_btnQuery.top = new FormAttachment(textDBIO, 6);
+        fd_btnQuery.left = new FormAttachment(textDBIO, 0, SWT.LEFT);
+        btnQuery.setLayoutData(fd_btnQuery);
+        btnQuery.setText("기본쿼리출력");
+        
+        Button btnVo = new Button(parent, SWT.NONE);
+        btnVo.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if ( Activator.getConnection() == null) {
+                    MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
+                    return;
+                }
+                
+                // 테이블 목록
+                String value = textDBIO.getText().trim();
+                if (StringUtils.isEmpty(value)) {
+                    MessageDialog.openInformation(parent.getShell(), "확인", "대상이 없습니다.");
+                    return;
+                }
+                
+                List<String> tableList = Arrays.asList(value.split("\n"));
+                List<String> resultList = SourceGenerator.createDefaultVo(tableList);
+                
+                textParameter.setText(String.join("\n", resultList));
+            }
+        });
+        FormData fd_btnVo = new FormData();
+        fd_btnVo.top = new FormAttachment(textDBIO, 6);
+        fd_btnVo.left = new FormAttachment(btnQuery, 6);
+        btnVo.setLayoutData(fd_btnVo);
+        btnVo.setText("기본VO");
+       
         createActions();
         initializeToolBar();
         initializeMenu();
     }
-
+    
     /**
      * Create the actions.
      */
@@ -314,7 +379,6 @@ public class DBIOGenView extends ViewPart {
         System.out.println(resultVoList.get(0).getSource());
         System.out.println("==================================");
         System.out.println("==================================");
-        //System.out.println(resultMapperList.get(0).getSource());
         
         Activator.closeThisPlugin();
         

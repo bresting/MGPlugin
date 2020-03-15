@@ -1,10 +1,13 @@
 package mgplugin.erd;
 
-import java.util.ArrayList;
+import java.text.Format;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.swt.widgets.Event;
 import org.insightech.er.ERDiagramActivator;
@@ -37,6 +40,8 @@ import mgplugin.query.QueryExec;
  */
 public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
 
+    public static final Format DATE_FORMAT = FastDateFormat.getInstance( "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            
     @Override
     public IAction createIAction(ERDiagramEditor arg0) {
         return new Action(arg0);
@@ -52,62 +57,79 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
         public void execute(Event event) throws Exception {
             
             try {
-                ERDiagramActivator.showConfirmDialog("물리명을 기준으로 META와 동기화 하시겠습니까?");
+                if ( ERDiagramActivator.showConfirmDialog("물리명을 기준으로 META와 동기화 하시겠습니까?") == false ) {
+                    return;
+                }
+                
                 ERDiagram diagram = this.getDiagram();
                 
-                List<Word> wordList = diagram.getDiagramContents().getDictionary().getWordList();
+                // 콘솔 클리어
+                Activator.console("\n\n물리명을 기준 동기화 합니다... - " + DATE_FORMAT.format(new Date()) );
                 
                 List<ERTable> erTableList = this.getDiagram().getDiagramContents().getContents().getTableSet().getList();
-                Map<String, List<String>> columnTableMap = new HashMap<>();
+                
+                Map<String, TableValue> tmpDate = new HashMap<>();
+                
                 for (ERTable erTable : erTableList) {
+                    
                     for ( NormalColumn column : erTable.getNormalColumns() ) {
-                        List<String> tableNameList = columnTableMap.get(column.getPhysicalName());
-                        if (tableNameList == null) {
-                            tableNameList = new ArrayList<String>();
-                            tableNameList.add(erTable.getPhysicalName());
-                        } else {
-                            tableNameList.add(erTable.getPhysicalName());
-                        }
                         
+                        // 기본 5대 컬럼 기본 nullable
                         if ( "FRST_REG_ID"     .equals(column.getPhysicalName() )  // 최초등록ID
                           || "FRST_REG_DTTM"   .equals(column.getPhysicalName() )  // 최초등록일시
                           || "LAST_PROC_ID"    .equals(column.getPhysicalName() )  // 최종처리ID
                           || "LAST_PROC_DTTM"  .equals(column.getPhysicalName() )  // 최종처리일시
                           || "LAST_PROC_PGM_ID".equals(column.getPhysicalName() )  // 최종처리프로그램ID
                         ) {
-                            column.setNotNull(true);
+                            column.setNotNull(false);
                         }
                         
-                        columnTableMap.put(column.getPhysicalName(), tableNameList);
+                        // TODO
+                        // 필드_CHAR    NOT NULL DEFAULT " "
+                        // 필드_DECIMAL NOT NULL DEFAULT 0
+                        
+                        
+                        //columnTableMap.put(column.getPhysicalName(), tableNameList);
+                        
+                        // 외래키 연결시 null, 테이블에 단어없음 연결 부모값 변경으로 같이 공유한다.
+                        Word word = column.getWord();
+                        if (word == null) {
+                            continue;
+                        }
+                        
+                        
+                        TableValue tableValue = tmpDate.get(word.getPhysicalName());
+                        
+                        if ( tableValue == null ) {
+                            tableValue = QueryExec.getTerms(word.getPhysicalName());
+                            tmpDate.put(word.getPhysicalName(), tableValue);
+                        }
+                        //TableValue tableValue = QueryExec.getTerms(word.getPhysicalName());
+                        
+                        if ( tableValue == null ) {
+                            Activator.console("[" + word.getPhysicalName() + ":" + word.getLogicalName() + "] 메타시스템에 없는 용어입니다. ERD 정보 유지합니다. - " + erTable.getPhysicalName());
+                            continue;
+                        }
+                        
+                        // 논리명 셋팅
+                        word.setLogicalName(tableValue.COLUMN_DESCRIPTION.trim());
+                        
+                        // 타입셋팅
+                        boolean isSetType = ImportMetaDataActionFactory.syncMetainfo(tableValue, word, erTable.getPhysicalName());
+                        
+                        if (isSetType == false) {
+                            //String tableName = String.join(", ", columnTableMap.get(word.getPhysicalName()));
+                            Activator.console("[" + word.getPhysicalName() + ":" + word.getLogicalName() + "] 매핑타입 없습니다. ERD 타입 유지합니다. - " + tableValue.TYPE + " - " + erTable.getPhysicalName());
+                        }
                     }
                 }
                 
-                for (Word word : wordList) {
-                    
-                    TableValue tableValue = QueryExec.getTerms(word.getPhysicalName());
-                    
-                    if ( tableValue == null ) {
-                        String tableName = String.join(", ", columnTableMap.get(word.getPhysicalName()));
-                        Activator.console("[" + word.getPhysicalName() + ":" + word.getLogicalName() + "] 메타시스템에 없는 용어입니다. ERD 정보 유지합니다. - " + tableName);
-                        continue;
-                    }
-                    
-                    // 논리명 셋팅
-                    word.setLogicalName(tableValue.COLUMN_DESCRIPTION.trim());
-                    
-                    // 타입셋팅
-                    boolean isSetType = ImportMetaDataActionFactory.syncMetainfo(tableValue, word);
-                    
-                    if (isSetType == false) {
-                        String tableName = String.join(", ", columnTableMap.get(word.getPhysicalName()));
-                        Activator.console("[" + word.getPhysicalName() + ":" + word.getLogicalName() + "] 매핑타입 없습니다. ERD 타입 유지합니다. - " + tableValue.TYPE + " - " + tableName);
-                    }
-                }
+                //diagram.getDiagramContents().getContents().getTableSet().getList()
                 
                 Settings settings = diagram.getDiagramContents().getSettings().clone();
                 ChangeSettingsCommand command = new ChangeSettingsCommand(diagram, settings, true);
-                
                 execute(command);
+                
                 
             } catch (Exception e) {
                 Activator.console(e);
@@ -115,15 +137,21 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
             }
             
             Activator.getDefault().showConsole(Activator.MG_PLUGIN_CONSOLE);
+            
+            ERDiagramActivator.showMessageDialog("완료 되었습니다.");
         }
-        
     }
-    
-    public static boolean syncMetainfo(TableValue table, Word word) {
+
+    public static boolean syncMetainfo(TableValue table, Word word, String tableName) {
+        
+        boolean isChanged = false;
+        
+        Word org = new Word(word);
         
         switch (table.TYPE.toLowerCase()) {
         case "decimal":
         case "numeric":
+            
             if ( "0".equals(table.SCALE) ) {
                 word.setType(SqlType.valueOf("SQLServer", "decimal(p)"), word.getTypeData(), "SQLServer");
                 word.getTypeData().setLength (Integer.parseInt(table.LENGTH));
@@ -133,44 +161,123 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
                 word.getTypeData().setLength (Integer.parseInt(table.LENGTH));
                 word.getTypeData().setDecimal(Integer.parseInt(table.SCALE ));
             }
-            return true;
+            
+            isChanged = true;
+            break;
         
         case "bigint":
             word.setType(SqlType.valueOf("SQLServer", "bigint"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (null);
             word.getTypeData().setDecimal(null);
-            return true;
+            
+            isChanged = true;
+            break;
 
         case "int":
             word.setType(SqlType.valueOf("SQLServer", "int"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (null);
             word.getTypeData().setDecimal(null);
-            return true;
             
+            isChanged = true;
+            break;
             
         case "datetime":
             word.setType(SqlType.valueOf("SQLServer", "datetime"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (null);
             word.getTypeData().setDecimal(null);
-            return true;
+            
+            isChanged = true;
+            break;
             
         case "char":
             word.setType(SqlType.valueOf("SQLServer", "char(n)"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (Integer.parseInt(table.LENGTH));
             word.getTypeData().setDecimal(null                          );
-            return true;
+            
+            isChanged = true;
+            break;
 
         case "varchar":
             word.setType(SqlType.valueOf("SQLServer", "varchar(n)"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (Integer.parseInt(table.LENGTH));
             word.getTypeData().setDecimal(null                          );
-            return true;
             
+            isChanged = true;
+            break;
+            
+        case "text":
+            word.setType(SqlType.valueOf("SQLServer", "text"), word.getTypeData(), "SQLServer");
+            word.getTypeData().setLength (null);
+            word.getTypeData().setDecimal(null);
+            
+            isChanged = true;
+            break;
         default:
             break;
         }
         
-        return false;
+        
+        String org_typ = String.valueOf(org.getType());
+        String org_len = String.valueOf(org.getTypeData().getLength ());
+        String org_dec = String.valueOf(org.getTypeData().getDecimal());
+        
+        String chg_tye = String.valueOf(word.getType());
+        String chg_len = String.valueOf(word.getTypeData().getLength ());
+        String chg_dec = String.valueOf(word.getTypeData().getDecimal());
+
+        if (org_typ.equals("null")) {
+            org_typ = "";
+        }
+        if (org_len.equals("null")) {
+            org_len = "";
+        }
+        if (org_dec.equals("null")) {
+            org_dec = "";
+        }
+        
+        // 
+        if (chg_tye.equals("null")) {
+            chg_tye = "";
+        }
+        if (chg_len.equals("null")) {
+            chg_len = "";
+        }
+        if (chg_dec.equals("null")) {
+            chg_dec = "";
+        }
+        
+        if ( org_typ.equals(chg_tye)
+          && org_len.equals(chg_len)
+          && org_dec.equals(chg_dec)
+        ) {
+            // 같음
+        } else {
+            
+            if ("TIMESTAMP".equalsIgnoreCase(org_typ)) {
+                org_typ = "DATETIME";
+            }
+            if ("character(n)".equalsIgnoreCase(org_typ)) {
+                org_typ = "CHAR(n)";
+            }
+            if ("INTEGER".equalsIgnoreCase(org_typ)) {
+                org_typ = "INT";
+            }
+            
+            // 
+            if ("TIMESTAMP".equalsIgnoreCase(chg_tye)) {
+                chg_tye = "DATETIME";
+            }
+            if ("character(n)".equalsIgnoreCase(chg_tye)) {
+                chg_tye = "CHAR(n)";
+            }
+            if ("INTEGER".equalsIgnoreCase(chg_tye)) {
+                chg_tye = "INT";
+            }
+            
+            Activator.console("변경: " + word.getPhysicalName() + "." + word.getName() + "[" + org_typ +" / "+ org_len + " / " + org_dec + " => " + chg_tye +" / "+ chg_len + " / " + chg_dec + "] - " + tableName);
+        }
+        
+        return isChanged;
     }
 
 /*

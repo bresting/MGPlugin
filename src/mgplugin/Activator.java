@@ -22,7 +22,6 @@ import org.eclipse.ui.console.IConsoleConstants;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -41,6 +40,8 @@ public class Activator extends AbstractUIPlugin {
     private static final Properties    PLUGIN_PROP       = new Properties();
     private static       Configuration TEMPLAT_CONFIG    = null;
     private static       Connection    CONNECTION        = null;
+    
+    public static final String VERSION = "VER.2020.03.05_0900";
     
     /* ============================================================================================================== */
     // https://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F
@@ -83,18 +84,23 @@ public class Activator extends AbstractUIPlugin {
         }
     }
     
-    
     public static void clearConsole() {
         MessageConsole myConsole = findConsole(MG_PLUGIN_CONSOLE);
         myConsole.clearConsole();
     }
-    public static void console(String msg) {
+    public static void console(final String msg) {
         try {
-            MessageConsole myConsole = findConsole(MG_PLUGIN_CONSOLE);
-            MessageConsoleStream out = myConsole.newMessageStream();
-            out.println(msg);
-        } catch (Exception e) {}
-        System.out.println(msg);
+            final MessageConsole myConsole = findConsole(MG_PLUGIN_CONSOLE);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    myConsole.newMessageStream().println(msg.toString());
+                    System.out.println(msg);
+                }
+            }).start();
+        } catch (Exception e) {
+            System.out.println("NO_CONSOLE: >> " + msg);
+        }
     }
     
     public static void console(Throwable ex) {
@@ -110,26 +116,26 @@ public class Activator extends AbstractUIPlugin {
             
             if ( CONNECTION == null || CONNECTION.isClosed() ) {
                 console("Connection db...");
-                CONNECTION = DriverManager.getConnection(PLUGIN_PROP.getProperty("db.connection"));
+                CONNECTION = DriverManager.getConnection(Activator.getProperty("db.connection"));
             }
             
             // 정상커넥션 3초간 확인 후 리턴 아니면 커넥션 새로 생성
             if (CONNECTION.isValid(3)) {
             } else {
-                CONNECTION = DriverManager.getConnection(PLUGIN_PROP.getProperty("db.connection"));
+                CONNECTION = DriverManager.getConnection(Activator.getProperty("db.connection"));
             }
             
         } catch (SQLException e) {
             e.printStackTrace();
             console("접속정보 리셋, 재접속" + e.toString());
             try {
-                CONNECTION = DriverManager.getConnection(PLUGIN_PROP.getProperty("db.connection"));
+                CONNECTION = DriverManager.getConnection(Activator.getProperty("db.connection"));
             } catch (SQLException e1) {
                 console(e1);
                 e1.printStackTrace();
             }
         }
-        
+        System.out.println(CONNECTION);
         return CONNECTION;
     }
     
@@ -137,7 +143,7 @@ public class Activator extends AbstractUIPlugin {
         
         TEMPLAT_CONFIG = new Configuration(Configuration.VERSION_2_3_29);
         
-        Activator.console("MgPlugin start... - VER.2020.01.16_1230");
+        Activator.console("MgPlugin start... - "+ VERSION);
         
         try (InputStream input = new FileInputStream(configPath + "\\config.properties") ) {
             PLUGIN_PROP.load(input);
@@ -235,7 +241,7 @@ public class Activator extends AbstractUIPlugin {
         /**
          * 사용자정보 eclipse ini로
          */
-        String eclipsePath = PLUGIN_PROP.getProperty("eclipse");
+        String eclipsePath = Activator.getProperty("eclipse");
         try (InputStream input = new FileInputStream(ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getParent() + "\\"+ eclipsePath + "\\eclipse.ini") ) {
             Properties tmpProp = new Properties();
             tmpProp.load(input);

@@ -118,7 +118,6 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
                             dataType = "INT";
                         }
                         
-                        
                         if ( dataType.contains("(n)") || dataType.contains("(p)") ) {
                             dataType = dataType.substring(0, dataType.lastIndexOf("("));
                             dataType = dataType + "(" + normalColumn.getTypeData().getLength() + ")";
@@ -150,9 +149,19 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
                         if (normalColumn.isNotNull()) {
                             columnData.setDataNull("NOT NULL");
                         }
-                        if (normalColumn.getDefaultValue() != null ) {
-                            columnData.setDataDefault(normalColumn.getDefaultValue());
+                        /*
+                        if ( ! StringUtils.isEmpty( normalColumn.getDefaultValue() ) ) {
+                            if ( dataType.contains("CHAR")
+                              || dataType.contains("TEXT")
+                            ) {
+                                columnData.setDataDefault("'" + normalColumn.getDefaultValue() + "'" );
+                            } else {
+                                columnData.setDataDefault(normalColumn.getDefaultValue());
+                            }
                         }
+                        */
+                        columnData.setDataDefault(normalColumn.getDefaultValue());
+                        
                         if (normalColumn.isPrimaryKey()) {
                             columnData.setPkYn("Y");
                         }
