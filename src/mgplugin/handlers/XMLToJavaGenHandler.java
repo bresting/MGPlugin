@@ -67,16 +67,19 @@ public class XMLToJavaGenHandler extends AbstractHandler {
             
             // 대상파일 TB_BC001MMapper.java
             File targetFile = new File(srcPath, sourceTemplate.getTypeName() + ".java");
-            
             try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
                 output.write(sourceTemplate.getSource());
                 Activator.console(targetFile.getAbsolutePath() + " 생성...");
+                
+                MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", targetFile.getName() + " 생성됨\n\n파일이 안보이는 경우 폴더 새로고침 하세요.");
             } catch (Exception e1) {
                 e1.printStackTrace();
-                Activator.console(e1.toString());
+                Activator.console(e1);
+                
+                MessageDialog.openError(editorPart.getSite().getShell(), "에러", "처리중 에러가 발생했습니다. console 확인 하세요.");
             }
             
-            MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", "처리내용 console 확인 후 폴더 새로고침 하세요.");
+            //MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", "처리내용 console 확인 후 폴더 새로고침 하세요.");
         }
 
         return null;

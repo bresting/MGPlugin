@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.ui.PlatformUI;
 import org.insightech.er.ERDiagramActivator;
 import org.insightech.er.editor.ERDiagramEditor;
 import org.insightech.er.editor.controller.editpart.element.node.ERTableEditPart;
@@ -49,6 +51,17 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
         
         @Override
         public void execute(Event event) throws Exception {
+            
+            MessageDialog dialog = new MessageDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
+                    , "대상확인", null
+                    , "DDL 대상 DB를 선택하세요.", MessageDialog.INFORMATION
+                    , new String[] { "기본DB","MIG DB", "취소" }, 0);
+            
+            int databaseType = dialog.open();
+            
+            if ( databaseType == 2 ) {
+                return;
+            }
             
             Activator.getDefault().getConsole(Activator.MG_PLUGIN_CONSOLE).clearConsole();
             
@@ -199,6 +212,7 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
                 Map<String, Object> root = new HashMap<String, Object>();
                 root.put("userName"     , Activator.getProperty("user.name"));
                 root.put("tableDataList", tableDataList   );
+                root.put("databaseType" , databaseType   );
                 
                 String tmpSource = Activator.getTemplateSource("erd_ddl.ftlh", root);
                 tmpSource = tmpSource.replace("&#39;", "'");

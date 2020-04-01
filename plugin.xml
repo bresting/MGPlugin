@@ -13,6 +13,7 @@
           name="query to java vo gen"
           id="mgplugin.commands.QueryToVo">
       </command>
+      
    </extension>
    
    <!-- 핸들러 -->
@@ -27,6 +28,7 @@
           commandId="mgplugin.commands.QueryToVo"
           class="mgplugin.handlers.QueryToVoGenHandler">
       </handler>
+      
    </extension>
    
    <!-- 바인딩 -->
@@ -44,6 +46,7 @@
             sequence="M3+2"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>
+
    </extension>
    
    <!-- 메뉴 -->
@@ -92,6 +95,7 @@
                   tooltip="XML을 기반으로 인터페이스를 생성합니다.">
             </command>
         </menuContribution>
+
    </extension>
 
     <!-- 스타트업 -->

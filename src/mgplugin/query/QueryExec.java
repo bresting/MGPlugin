@@ -58,7 +58,7 @@ public class QueryExec {
                 
                 tableValue = new TableValue();
                 
-                tableValue.COLUMN_NAME        = srchColumn                       ;
+                //tableValue.COLUMN_NAME        = srchColumn                       ;
                 tableValue.COLUMN_DESCRIPTION = rs.getString("TERMS_LOGIC_NAME" ) + "" + endNumber;
                 tableValue.TYPE               = rs.getString("DOMAIN_DATA_TYPE" );
                 tableValue.LENGTH             = rs.getString("DOMAIN_DATA_SIZE" );

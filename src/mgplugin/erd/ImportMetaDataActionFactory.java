@@ -274,7 +274,7 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
                 chg_tye = "INT";
             }
             
-            Activator.console("변경: " + word.getPhysicalName() + "." + word.getName() + "[" + org_typ +" / "+ org_len + " / " + org_dec + " => " + chg_tye +" / "+ chg_len + " / " + chg_dec + "] - " + tableName);
+            Activator.console("변경: " + word.getPhysicalName() + ":" + word.getName() + "[" + org_typ +" / "+ org_len + " / " + org_dec + " => " + chg_tye +" / "+ chg_len + " / " + chg_dec + "] - " + tableName);
         }
         
         return isChanged;

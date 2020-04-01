@@ -12,52 +12,11 @@ package mgplugin.generator.entity;
  *
  * </pre>
  */
-public class XMLQuery {
+public class XmlTagElement {
     
-    //private String fileName      = "";
-    //private String queryId       = "";
-    
-    private String query         = "";
     private String resultType    = "";
     private String parameterType = "";
-
-//    /**
-//     * @return the fileName
-//     */
-//    public String getFileName() {
-//        return fileName;
-//    }
-//    /**
-//     * @param fileName the fileName to set
-//     */
-//    public void setFileName(String fileName) {
-//        this.fileName = fileName;
-//    }
-    /**
-     * @return the query
-     */
-    public String getQuery() {
-        return query;
-    }
-    /**
-     * @param query the query to set
-     */
-    public void setQuery(String query) {
-        this.query = query;
-    }
     
-    /**
-     * @return the queryId
-     */
-    //public String getQueryId() {
-    //    return queryId;
-    //}
-    /**
-     * @param queryId the queryId to set
-     */
-    //public void setQueryId(String queryId) {
-    //    this.queryId = queryId;
-    //}
     /**
      * @return the resultType
      */
@@ -82,5 +41,4 @@ public class XMLQuery {
     public void setParameterType(String parameterType) {
         this.parameterType = parameterType;
     }
-    
 }

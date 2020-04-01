@@ -1,5 +1,8 @@
 package mgplugin.handlers;
 
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -16,7 +19,7 @@ import org.eclipse.ui.part.EditorPart;
 import mgplugin.Activator;
 import mgplugin.generator.SourceGenerator;
 import mgplugin.generator.entity.SourceTemplate;
-import mgplugin.generator.entity.XMLQuery;
+import mgplugin.generator.entity.XmlTagElement;
 import mgplugin.views.DBIOGenView;
 
 /**
@@ -56,12 +59,17 @@ public class QueryToVoGenHandler extends AbstractHandler {
                     
                     int offset = ((ITextSelection) iSelection).getOffset();
                     
-                    XMLQuery query = SourceGenerator.getQueryAtOffset(file.getRawLocation().toOSString(), offset);
-                    
                     SourceTemplate inSourceTemplate  = new SourceTemplate();
                     SourceTemplate outSourceTemplate = new SourceTemplate();
                     
-                    SourceGenerator.getQueryVoFields(query, inSourceTemplate, outSourceTemplate);
+                    // 1. 현재옵셋 input, ouput 가져오기
+                    XmlTagElement xmlTagElement = SourceGenerator.getTypeAtOffset(file.getRawLocation().toOSString(), offset);
+                    
+                    // 2. parameterType, resultType 결과맵 가져오기
+                    Map<String, List<String>> typeFieldMap = SourceGenerator.getTypeFieldMap(file.getRawLocation().toOSString());
+                    
+                    
+                    SourceGenerator.getVoTemplate(xmlTagElement, typeFieldMap, inSourceTemplate, outSourceTemplate);
                     
                     try {
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(Activator.DBIO_GEN_VIEW_ID);
