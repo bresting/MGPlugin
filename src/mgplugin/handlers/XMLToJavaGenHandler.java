@@ -43,43 +43,52 @@ public class XMLToJavaGenHandler extends AbstractHandler {
             return null;
         }
         
-        SourceTemplate sourceTemplate = SourceGenerator.mapperToInterface(file.getRawLocation().toOSString());
+        try {
+            SourceTemplate sourceTemplate = SourceGenerator.mapperToInterface(file.getRawLocation().toOSString());
         
-        if (sourceTemplate.getPackageName().isEmpty()) {
-            MessageDialog.openWarning(editorPart.getSite().getShell(), "확인", "mybatis mapper 형식의 XML이 아닙니다.");
-            return false;
-        }
-        
-        boolean result = MessageDialog.openQuestion(editorPart.getSite().getShell(), "XML -> Interface", sourceTemplate.getPackageName() + "." +sourceTemplate.getTypeName() +" 생성 하시겠습니까?\n\n파일 존재하는 경우 덮어쓰게 됩니다.");
-        
-        if ( result ) {
-            
-            String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
-            srcPath       += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
-            srcPath       += "\\" + Activator.getProperty("project.sourcePath");
-            srcPath       += "\\" + sourceTemplate.getPackageName().replace(".", "\\");
-            
-            // 디렉토리 없는 경우 생성
-            File targetDir = new File(srcPath);
-            if (!targetDir.exists()) {
-                targetDir.mkdirs();
+            if (sourceTemplate.getPackageName().isEmpty()) {
+                MessageDialog.openWarning(editorPart.getSite().getShell(), "확인", "mybatis mapper 형식의 XML이 아닙니다.");
+                return false;
             }
             
-            // 대상파일 TB_BC001MMapper.java
-            File targetFile = new File(srcPath, sourceTemplate.getTypeName() + ".java");
-            try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
-                output.write(sourceTemplate.getSource());
-                Activator.console(targetFile.getAbsolutePath() + " 생성...");
-                
-                MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", targetFile.getName() + " 생성됨\n\n파일이 안보이는 경우 폴더 새로고침 하세요.");
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                Activator.console(e1);
-                
-                MessageDialog.openError(editorPart.getSite().getShell(), "에러", "처리중 에러가 발생했습니다. console 확인 하세요.");
-            }
+            boolean result = MessageDialog.openQuestion(editorPart.getSite().getShell(), "XML -> Interface", sourceTemplate.getPackageName() + "." +sourceTemplate.getTypeName() +" 생성 하시겠습니까?\n\n파일 존재하는 경우 덮어쓰게 됩니다.");
             
-            //MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", "처리내용 console 확인 후 폴더 새로고침 하세요.");
+            if ( result ) {
+                
+                String srcPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
+                srcPath       += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
+                srcPath       += "\\" + Activator.getProperty("project.sourcePath");
+                srcPath       += "\\" + sourceTemplate.getPackageName().replace(".", "\\");
+                
+                // 디렉토리 없는 경우 생성
+                File targetDir = new File(srcPath);
+                if (!targetDir.exists()) {
+                    targetDir.mkdirs();
+                }
+                
+                // 대상파일 TB_BC001MMapper.java
+                File targetFile = new File(srcPath, sourceTemplate.getTypeName() + ".java");
+                try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
+                    output.write(sourceTemplate.getSource());
+                    Activator.console(targetFile.getAbsolutePath() + " 생성...");
+                    
+                    MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", targetFile.getName() + " 생성됨\n\n파일이 안보이는 경우 폴더 새로고침 하세요.");
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    Activator.console(e1);
+                    
+                    MessageDialog.openError(editorPart.getSite().getShell(), "에러", "처리중 에러가 발생했습니다. console 확인 하세요.");
+                }
+                
+                //MessageDialog.openInformation(editorPart.getSite().getShell(), "확인", "처리내용 console 확인 후 폴더 새로고침 하세요.");
+            }
+        
+        } catch (Exception e) {
+            e.printStackTrace();
+            Activator.console(e);
+            MessageDialog.openError(editorPart.getSite().getShell(), "에러", "처리중 에러가 발생했습니다. console 확인 하세요.");
+            
+            Activator.getDefault().showConsole(Activator.MG_PLUGIN_CONSOLE);
         }
 
         return null;

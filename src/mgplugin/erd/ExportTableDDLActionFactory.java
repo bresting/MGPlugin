@@ -26,7 +26,7 @@ import mgplugin.erd.entity.TableData;
 
 /**
  * <pre>
- * @programName : 프로그래명
+ * @programName : 프로그램명
  * @description : 프로그램_처리내용
  * @history
  * ----------   ---------------   --------------------------------------------------------------------------------------
@@ -127,8 +127,11 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
                         if ("character(n)".equalsIgnoreCase(dataType)) {
                             dataType = "CHAR(n)";
                         }
-                        if ("INTEGER".equalsIgnoreCase(dataType)) {
+                        else if ("INTEGER".equalsIgnoreCase(dataType)) {
                             dataType = "INT";
+                        }
+                        else if ("VARCHAR".equalsIgnoreCase(dataType)) {
+                            dataType = "VARCHAR(MAX)";
                         }
                         
                         if ( dataType.contains("(n)") || dataType.contains("(p)") ) {

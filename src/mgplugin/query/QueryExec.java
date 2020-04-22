@@ -11,7 +11,7 @@ import mgplugin.generator.entity.TableValue;
 
 /**
  * <pre>
- * @programName : 프로그래명
+ * @programName : 프로그램명
  * @description : 프로그램_처리내용
  * @history
  * ----------   ---------------   --------------------------------------------------------------------------------------

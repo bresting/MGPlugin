@@ -28,7 +28,7 @@ import mgplugin.query.QueryExec;
 
 /**
  * <pre>
- * @programName : 프로그래명
+ * @programName : 프로그램명
  * @description : 프로그램_처리내용
  * @history
  * ----------   ---------------   --------------------------------------------------------------------------------------
@@ -87,8 +87,6 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
                         // TODO
                         // 필드_CHAR    NOT NULL DEFAULT " "
                         // 필드_DECIMAL NOT NULL DEFAULT 0
-                        
-                        
                         //columnTableMap.put(column.getPhysicalName(), tableNameList);
                         
                         // 외래키 연결시 null, 테이블에 단어없음 연결 부모값 변경으로 같이 공유한다.
@@ -205,6 +203,14 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
             isChanged = true;
             break;
             
+        case "varchar(max)":
+            word.setType(SqlType.valueOf("SQLServer", "varchar(max)"), word.getTypeData(), "SQLServer");
+            word.getTypeData().setLength (null);
+            word.getTypeData().setDecimal(null);
+            
+            isChanged = true;
+            break;
+            
         case "text":
             word.setType(SqlType.valueOf("SQLServer", "text"), word.getTypeData(), "SQLServer");
             word.getTypeData().setLength (null);
@@ -262,8 +268,6 @@ public class ImportMetaDataActionFactory implements IERDiagramActionFactory {
             if ("INTEGER".equalsIgnoreCase(org_typ)) {
                 org_typ = "INT";
             }
-            
-            // 
             if ("TIMESTAMP".equalsIgnoreCase(chg_tye)) {
                 chg_tye = "DATETIME";
             }

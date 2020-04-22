@@ -33,7 +33,7 @@ import mgplugin.generator.entity.SourceTemplate;
 
 /**
  * <pre>
- * @programName : 프로그래명
+ * @programName : 프로그램명
  * @description : 프로그램_처리내용
  * @history
  * ----------   ---------------   ------------------------------------------------------------------
@@ -159,24 +159,29 @@ public class DBIOGenView extends ViewPart {
                         /**
                          * Mapper.xml 읽어서 Mapper.java 생성
                          */
-                        SourceTemplate interfaceSourceTemplate = SourceGenerator.mapperToInterface(targetFile.getAbsolutePath());
-                        srcPath  = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
-                        srcPath += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
-                        srcPath += "\\" + Activator.getProperty("project.sourcePath");
-                        srcPath += "\\" + interfaceSourceTemplate.getPackageName().replace(".", "\\");
-                        
-                        // 디렉토리 없는 경우 생성
-                        targetDir = new File(srcPath);
-                        if (!targetDir.exists()) {
-                            targetDir.mkdirs();
-                        }
-                        
-                        // 대상파일
-                        targetFile = new File(srcPath, interfaceSourceTemplate.getTypeName() + ".java");
-                        
-                        try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
-                            output.write(interfaceSourceTemplate.getSource());
-                            Activator.console(targetFile.getAbsolutePath() + " 생성...");
+                        try {
+                            SourceTemplate interfaceSourceTemplate = SourceGenerator.mapperToInterface(targetFile.getAbsolutePath());
+                            srcPath  = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getAbsolutePath();  // WORKSPACE PATH
+                            srcPath += "\\" + Activator.getProperty("project.name"      );                                 // 프로젝트명
+                            srcPath += "\\" + Activator.getProperty("project.sourcePath");
+                            srcPath += "\\" + interfaceSourceTemplate.getPackageName().replace(".", "\\");
+                            
+                            // 디렉토리 없는 경우 생성
+                            targetDir = new File(srcPath);
+                            if (!targetDir.exists()) {
+                                targetDir.mkdirs();
+                            }
+                            
+                            // 대상파일
+                            targetFile = new File(srcPath, interfaceSourceTemplate.getTypeName() + ".java");
+                            
+                            try (BufferedWriter output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetFile.getPath()), "UTF8"))) {
+                                output.write(interfaceSourceTemplate.getSource());
+                                Activator.console(targetFile.getAbsolutePath() + " 생성...");
+                            } catch (Exception e1) {
+                                Activator.console(e1.toString());
+                                e1.printStackTrace();
+                            }
                         } catch (Exception e1) {
                             Activator.console(e1.toString());
                             e1.printStackTrace();

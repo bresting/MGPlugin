@@ -48,7 +48,7 @@ import mgplugin.generator.entity.XmlTagElement;
  */
 public class SourceGenerator {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
         // XML -> Interface
         {
@@ -111,8 +111,9 @@ public class SourceGenerator {
      * @param filePath
      * @param offset
      * @return
+     * @throws Exception 
      */
-    public static XmlTagElement getTypeAtOffset(String filePath, int offset) {
+    public static XmlTagElement getTypeAtOffset(String filePath, int offset) throws Exception {
         
         XmlTagElement   xmlTagElement = new XmlTagElement();
         XMLInputFactory factory       = XMLInputFactory.newInstance();
@@ -167,7 +168,7 @@ public class SourceGenerator {
             }
             
         } catch (Exception e) {
-            Activator.console(e);
+            throw e;
         }
         
         return xmlTagElement;
@@ -178,8 +179,9 @@ public class SourceGenerator {
      * 타입별 쿼리가져오기
      * @param filePath
      * @return
+     * @throws Exception 
      */
-    public static Map<String, List<String>> getTypeFieldMap(String filePath) {
+    public static Map<String, List<String>> getTypeFieldMap(String filePath) throws Exception {
         XMLInputFactory           factory       = XMLInputFactory.newInstance();
         Map<String, List<String>> queryMapList  = new HashMap<>();
         List<String>              queryTextList = null;
@@ -222,7 +224,6 @@ public class SourceGenerator {
                       || UPDATE.equals(streamReader.getName().toString())
                       || DELETE.equals(streamReader.getName().toString())
                     ) {
-                        
                         // 입출력 파라미터 추출
                         List<String> inFieldList = new ArrayList<>();
                         List<String> otFieldList = new ArrayList<>();
@@ -264,9 +265,8 @@ public class SourceGenerator {
                     }
                 }
             }
-            
         } catch (Exception e) {
-            Activator.console(e);
+            throw e;
         }
         
         return queryMapList;
@@ -363,7 +363,7 @@ public class SourceGenerator {
     public static Pattern PAT_LINE_COMMENT = Pattern.compile("--.*");
     public static Pattern PAT_SELECT       = Pattern.compile("SELECT(.*?)(FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     public static Pattern PAT_COLUMN       = Pattern.compile("(\\w+)(\\s*)(,|$)"  , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PAR_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{([\\w_]+).*?\\}");
+    public static Pattern PAT_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{([\\w_]+).*?\\}");
     
     /**
      * 파라미터
@@ -372,7 +372,7 @@ public class SourceGenerator {
      * @return
      */
     public static List<String> getInputFields(String query) {
-        Matcher mat = PAR_BIND_COLUMN.matcher(query);
+        Matcher mat = PAT_BIND_COLUMN.matcher(query);
         List<String> columnList = new ArrayList<String>();
         while(mat.find()) {
             String bindStr = mat.group(2);
@@ -453,8 +453,9 @@ public class SourceGenerator {
      * 
      * @param filePath
      * @return
+     * @throws Exception 
      */
-    public static SourceTemplate mapperToInterface(String filePath) {
+    public static SourceTemplate mapperToInterface(String filePath) throws Exception {
         
         XMLInputFactory      factory            = XMLInputFactory.newInstance();
         SourceTemplate       sourceTemplate     = new SourceTemplate();
@@ -570,7 +571,7 @@ public class SourceGenerator {
             
         } catch (Exception e) {
             e.printStackTrace();
-            Activator.console(e.toString());
+            throw e;
         }
         
         return sourceTemplate;
@@ -590,6 +591,11 @@ public class SourceGenerator {
         
         List<FieldTemplate> resultList = new ArrayList<>();
 
+        if (columnList == null) {
+            return resultList;
+        }
+
+        
         List<String> queryTermsList = new ArrayList<>();
         queryTermsList.add("SELECT A.TERMS_PHYCS_NAME                      ");
         queryTermsList.add("     , A.TERMS_LOGIC_NAME                      ");
@@ -608,13 +614,14 @@ public class SourceGenerator {
         queryWordList.add("  FROM METADB.DBO.WORD_DIC  A                ");
         queryWordList.add(" WHERE A.WORD_PHYCS_NAME = ':WORD_PHYCS_NAME'");  // 바인딩
         
-        for (String column : columnList ) {
+        for (String column : columnList) {
             
             try (Statement stmt = Activator.getConnection().createStatement()) {
                 
                 String    srchColumn = column.trim().replaceAll("\\d+$", "");  // 숫자로 끝나는 경우 제거
                 String    endNumber  = column.trim().replace(srchColumn, "");
                           srchColumn = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, srchColumn);  // corpCode -> CORP_CODE
+                          
                 String    execQuery  = String.join("\n", queryTermsList).replace(":TERMS_PHYCS_NAME", srchColumn);
                 ResultSet resultSet  = stmt.executeQuery(execQuery);
                 
