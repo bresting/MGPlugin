@@ -13,7 +13,6 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +46,8 @@ import mgplugin.generator.entity.XmlTagElement;
  * </pre>
  */
 public class SourceGenerator {
-
+    
+    /*
     public static void main(String[] args) throws Exception {
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
         // XML -> Interface
@@ -94,7 +94,8 @@ public class SourceGenerator {
         }
         
         Activator.closeThisPlugin();
-    }
+    }*/
+
     
     // MYBATIS 태그정보
     private static final String SELECT = "select";
@@ -103,7 +104,7 @@ public class SourceGenerator {
     private static final String DELETE = "delete";
     
     private static final String PARAMETER_TYPE = "parameterType";
-    private static final String RESULT_TYPE = "resultType";
+    private static final String RESULT_TYPE    = "resultType";
     
     /**
      * 옵셋위치 타입가져오기
@@ -192,6 +193,7 @@ public class SourceGenerator {
             
             String resultType    = "";
             String parameterType = "";
+            String queryId       = "";
             while (streamReader.hasNext()) {
                 int nextEventType = streamReader.next();  // streamReader.getEventType()
                 
@@ -202,6 +204,7 @@ public class SourceGenerator {
                       || UPDATE.equals(streamReader.getName().toString())
                       || DELETE.equals(streamReader.getName().toString())
                     ) {
+                        queryId = getAttr(streamReader, "id");
                         // 결과셋 저장
                         parameterType = getAttr(streamReader, PARAMETER_TYPE);
                         resultType    = getAttr(streamReader, RESULT_TYPE   );
@@ -227,16 +230,25 @@ public class SourceGenerator {
                         // 입출력 파라미터 추출
                         List<String> inFieldList = new ArrayList<>();
                         List<String> otFieldList = new ArrayList<>();
+                        String query = String.join("", queryTextList);
+                        
+                        inFieldList = getInputFields (query);
+                        
+                        if ( SELECT.equals(streamReader.getName().toString()) ) {
+                            otFieldList = getOutputFields(query, queryId);
+                        }
+                        
+                        /*
                         if ( queryTextList != null) {
                             String query = String.join("", queryTextList);
                             inFieldList = getInputFields (query);
                             otFieldList = getOutputFields(query);
-                        }
+                        }*/
                         
                         // 쿼리텍스트 초기화
                         queryTextList = null;
                         
-                        // 파라미터_필드_셋팅
+                        // 파라미터_필드_셋팅 - java.lang.String
                         List<String> parameterFieldList = queryMapList.get(parameterType);
                         if ( parameterFieldList == null ) {
                             parameterFieldList = new ArrayList<String>();
@@ -248,7 +260,10 @@ public class SourceGenerator {
                             }
                         }
                         
-                        // 결과_필드_셋팅
+                        // 파라미터_필드_맵추가
+                        queryMapList.put(parameterType, parameterFieldList);
+                        
+                        // 결과_필드_셋팅 - java.lang.String
                         List<String> resultFieldList = queryMapList.get(resultType);
                         if ( resultFieldList == null ) {
                             resultFieldList = new ArrayList<String>();
@@ -260,7 +275,7 @@ public class SourceGenerator {
                             }
                         }
                         
-                        queryMapList.put(parameterType, parameterFieldList);
+                        // 결과_필드_맵추가
                         queryMapList.put(resultType   , resultFieldList   );
                     }
                 }
@@ -299,7 +314,7 @@ public class SourceGenerator {
         
         if ( xmlTagElement.getParameterType().equals(xmlTagElement.getResultType()) ) {
             
-            List<String> inFieldList = typeFieldMap.get(xmlTagElement.getParameterType());
+            List<String> inFieldList     = typeFieldMap.get(xmlTagElement.getParameterType());
             
             /**
              * 입력 & 결과
@@ -360,10 +375,48 @@ public class SourceGenerator {
     /**
      * XML QUERY -> VO
      */
-    public static Pattern PAT_LINE_COMMENT = Pattern.compile("--.*");
-    public static Pattern PAT_SELECT       = Pattern.compile("SELECT(.*?)(FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PAT_COLUMN       = Pattern.compile("(\\w+)(\\s*)(,|$)"  , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PAT_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{([\\w_]+).*?\\}");
+    public static Pattern PATTERN_LINE_COMMENT = Pattern.compile("--.*");
+    
+    public static Pattern PATTERN_SELECT_UNION = Pattern.compile("UNION.*?SELECT"     , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_SELECT       = Pattern.compile("SELECT(.*?)(FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_COLUMN       = Pattern.compile("(\\w+)(\\s*)(,|$)"  , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{(\\w+).*?\\}");
+    
+    public static void main(String[] args) throws Exception {
+        
+        StringBuilder sbQuery = new StringBuilder();
+        sbQuery.append("\n").append("SELECT");
+        sbQuery.append("\n").append("  COMM_CD_ID AS VL");
+        sbQuery.append("\n").append(" FROM TBL" );
+        sbQuery.append("\n").append(" UNION ALL " );
+        sbQuery.append("\n").append("SELECT");
+        sbQuery.append("\n").append("  COMM_CD_ID AS VL");
+        sbQuery.append("\n").append(" FROM TBL" );
+        
+        
+        sbQuery.append("\n").append("SELECT");
+        sbQuery.append("\n").append("  COMM_CD_ID         AS commCdId");
+        sbQuery.append("\n").append(", COMM_CD            AS commCd  ");
+        sbQuery.append("\n").append(", PROC_SN            AS procSn  ");
+        sbQuery.append("\n").append(" FROM TBL" );
+        
+        sbQuery.append("\n").append(" UNION ALL " );
+        sbQuery.append("\n").append("SELECT");
+        sbQuery.append("\n").append("  COMM_CD_ID");
+        sbQuery.append("\n").append(", COMM_CD   ");
+        sbQuery.append("\n").append(", PROC_SN   ");
+        sbQuery.append("\n").append(" FROM TBL" );
+        
+        sbQuery.append("\n").append(" UNION  " );
+        sbQuery.append("\n").append("SELECT");
+        sbQuery.append("\n").append("  COMM_CD_ID");
+        sbQuery.append("\n").append(", COMM_CD   ");
+        sbQuery.append("\n").append(", PROC_SN   ");
+        sbQuery.append("\n").append(" FROM TBL" );
+        
+        List<String> temp = SourceGenerator.getOutputFields(sbQuery.toString(), "");
+        System.out.println(temp);
+    }
     
     /**
      * 파라미터
@@ -372,7 +425,7 @@ public class SourceGenerator {
      * @return
      */
     public static List<String> getInputFields(String query) {
-        Matcher mat = PAT_BIND_COLUMN.matcher(query);
+        Matcher mat = PATTERN_BIND_COLUMN.matcher(query);
         List<String> columnList = new ArrayList<String>();
         while(mat.find()) {
             String bindStr = mat.group(2);
@@ -380,18 +433,14 @@ public class SourceGenerator {
                  columnList.add(mat.group(2));
             }
         }
+        
         return columnList;
     }
     
-    public static List<String> getOutputFields(String query) {
+    public static List<String> getOutputFields(String query, String queryId) {
         
-        // 라인주석 제거
-        Matcher lineMatcher = PAT_LINE_COMMENT.matcher(query);
-        StringBuffer sbReplace = new StringBuffer();
-        while(lineMatcher.find()) {
-            lineMatcher.appendReplacement(sbReplace, "");
-        }
-        lineMatcher.appendTail(sbReplace);
+        // 라인주석제거
+        query = PATTERN_LINE_COMMENT.matcher(query).replaceAll("");
         
         // 블럭주석 & 괄호 제거
         Stack<Integer> stkMultiComment   = new Stack<Integer>();
@@ -411,7 +460,19 @@ public class SourceGenerator {
                     }
                     idx++;
                 }
-                
+            }
+            
+            if ( ! stkMultiComment.isEmpty() ) {
+                Activator.console("주석 /* ... */ 시작, 종료가 맞지 않습니다. - " + queryId);
+            }
+            
+        } catch ( ArrayIndexOutOfBoundsException | EmptyStackException e) {
+            Activator.console("주석 /* ... */ 시작, 종료가 맞지 않습니다. - " + queryId);
+        }
+        
+        
+        try {
+            for (int idx = 0; idx < arrQuery.length; idx++) {
                 // 괄호
                 if ( arrQuery[idx] == '(') {
                     stkBracketComment.push(idx);
@@ -425,23 +486,60 @@ public class SourceGenerator {
                     }
                 }
             }
+            
+            if ( ! stkBracketComment.isEmpty() ) {
+                Activator.console("주석 /* ... */ 시작, 종료가 맞지 않습니다. - " + queryId);
+            }
         } catch ( ArrayIndexOutOfBoundsException | EmptyStackException e) {
-            Activator.console("주석 또는 괄호, 시작, 종료가 맞지 않습니다. - " + e.toString());
+            Activator.console("괄호 ( ... ) 시작, 종료가 맞지 않습니다. - " + queryId);
+        }
+        
+        query = String.valueOf(arrQuery);
+        
+        /**
+         * 복합쿼리영역(multiple query block) 사용시 마지막 SELECT 구문이 출력 영역이다.
+         * 
+         * -------------------------------------------------------------------------------------------------------------
+         * INSERT INTO TMP SELECT COL_A FROM A
+         * 
+         * SELECT ... FROM A1
+         * UNION
+         * SELECT ... FROM A2
+         *
+         * SELECT ... FROM TBL1 <- 첫번째 SELECT 영역이 AS 컬럼 부분이다.
+         * UNION ALL
+         * SELECT ... FROM TBL2
+         * -------------------------------------------------------------------------------------------------------------
+         * 
+         * 위 쿼리는 UNION 구문 삭제 후 마지막 영역 SELECT를 캡쳐해서 사용한다.
+         * INSERT INTO TMP SELECT COL_A FROM A
+         * 
+         * SELECT ... FROM A1
+         * 
+         * SELECT ... FROM TBL1
+         */
+        query = PATTERN_SELECT_UNION.matcher(query).replaceAll("");
+        
+        /**
+         * SELECT ... FROM DUAL <- 첫번째 SELECT
+         * UNION ALL
+         * SELECT ... FROM DUAL
+         */
+        Matcher selectMatcher = PATTERN_SELECT.matcher(query);
+        while( selectMatcher.find() ) {
+            query = selectMatcher.group(1);
         }
         
         List<String> columnList = new ArrayList<String>();
         
-        // SELECT ... FROM 또는 SELECT 문장종료
-        Matcher selectMatcher = PAT_SELECT.matcher(String.valueOf(arrQuery));
-        if (selectMatcher.find()) {
-            Matcher columnMatcher = PAT_COLUMN.matcher(selectMatcher.group(1));
+        if ( ! query.isEmpty()) {
+            Matcher columnMatcher = PATTERN_COLUMN.matcher(query);
             while (columnMatcher.find()) {
                 String column = columnMatcher.group(1);
                 if (columnList.contains(column)) {
-                    Activator.console("SELECT [" + column + "] 중복컬럼이 존재합니다.");
+                    Activator.console("SELECT [" + column + "] 중복컬럼이 존재합니다." + queryId);
                 }
-                
-                columnList.add(columnMatcher.group(1));
+                columnList.add(column);
             }
         }
         
@@ -594,7 +692,6 @@ public class SourceGenerator {
         if (columnList == null) {
             return resultList;
         }
-
         
         List<String> queryTermsList = new ArrayList<>();
         queryTermsList.add("SELECT A.TERMS_PHYCS_NAME                      ");
@@ -603,15 +700,15 @@ public class SourceGenerator {
         queryTermsList.add("     , B.DOMAIN_DATA_TYPE                      ");
         queryTermsList.add("     , B.DOMAIN_DATA_SIZE                      ");
         queryTermsList.add("     , B.DOMAIN_DATA_SCALE                     ");
-        queryTermsList.add("  FROM METADB.DBO.TERMS_DIC  A                 ");
-        queryTermsList.add("  JOIN METADB.DBO.DOMAIN_DIC B                 ");
+        queryTermsList.add("  FROM METADB.DBO.TERMS_DIC  A WITH(NOLOCK)    ");
+        queryTermsList.add("  JOIN METADB.DBO.DOMAIN_DIC B WITH(NOLOCK)    ");
         queryTermsList.add("    ON A.DOMAIN_NAME      = B.DOMAIN_NAME      ");
         queryTermsList.add(" WHERE A.TERMS_PHYCS_NAME = ':TERMS_PHYCS_NAME'");  // 바인딩
         
         List<String> queryWordList = new ArrayList<>();
         queryWordList.add("SELECT A.WORD_PHYCS_NAME                     ");
         queryWordList.add("     , A.WORD_LOGIC_NAME                     ");
-        queryWordList.add("  FROM METADB.DBO.WORD_DIC  A                ");
+        queryWordList.add("  FROM METADB.DBO.WORD_DIC A WITH(NOLOCK)    ");
         queryWordList.add(" WHERE A.WORD_PHYCS_NAME = ':WORD_PHYCS_NAME'");  // 바인딩
         
         for (String column : columnList) {

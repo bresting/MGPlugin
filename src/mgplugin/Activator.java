@@ -41,7 +41,7 @@ public class Activator extends AbstractUIPlugin {
     private static       Configuration TEMPLAT_CONFIG    = null;
     private static       Connection    CONNECTION        = null;
     
-    public static final String VERSION = "VER.2020.04.16_1000";
+    public static final String VERSION = "VER.2020.06.10_1000";
     
     /* ============================================================================================================== */
     // https://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F
@@ -135,7 +135,6 @@ public class Activator extends AbstractUIPlugin {
                 e1.printStackTrace();
             }
         }
-        System.out.println(CONNECTION);
         return CONNECTION;
     }
     

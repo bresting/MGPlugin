@@ -34,8 +34,8 @@ public class QueryExec {
         queryList.add("     , B.DOMAIN_DATA_TYPE                      ");
         queryList.add("     , B.DOMAIN_DATA_SIZE                      ");
         queryList.add("     , B.DOMAIN_DATA_SCALE                     ");
-        queryList.add("  FROM TERMS_DIC  A                            ");
-        queryList.add("  JOIN DOMAIN_DIC B                            ");
+        queryList.add("  FROM METADB.DBO.TERMS_DIC  A WITH(NOLOCK)    ");
+        queryList.add("  JOIN METADB.DBO.DOMAIN_DIC B WITH(NOLOCK)    ");
         queryList.add("    ON A.DOMAIN_NAME      = B.DOMAIN_NAME      ");
         queryList.add(" WHERE A.TERMS_PHYCS_NAME = ':TERMS_PHYCS_NAME'");  // // 바인딩
 

@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -322,11 +323,36 @@ public class DBIOGenView extends ViewPart {
         fd_btnVo.left = new FormAttachment(btnQuery, 6);
         btnVo.setLayoutData(fd_btnVo);
         btnVo.setText("기본VO");
+        
+        Button btnExtractBody = new Button(parent, SWT.NONE);
+        btnExtractBody.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                String regx = "public class \\w* extends BaseObject<\\w*>";
+                if ( Pattern.compile(regx).matcher(textParameter.getText()).find() ) {
+                    int paramStart = textParameter.getText().indexOf("{") + 1;
+                    int paramEnd   = textParameter.getText().lastIndexOf("}") - 1;
+                    textParameter.setText("    " +textParameter.getText(paramStart , paramEnd).trim());
+                }
+                
+                if ( Pattern.compile(regx).matcher(textResult.getText()).find() ) {
+                    int resultStart = textResult.getText().indexOf("{") + 1;
+                    int resultEnd   = textResult.getText().lastIndexOf("}") - 1;
+                    textResult.setText("    " + textResult.getText(resultStart, resultEnd).trim());
+                }
+            }
+        });
+        FormData fd_btnExtractBody = new FormData();
+        fd_btnExtractBody.bottom = new FormAttachment(btnCreateDBIO, 0, SWT.BOTTOM);
+        fd_btnExtractBody.left = new FormAttachment(btnNewButton, 6);
+        btnExtractBody.setLayoutData(fd_btnExtractBody);
+        btnExtractBody.setText("내용추출{...}");
        
         createActions();
         initializeToolBar();
         initializeMenu();
     }
+    
     
     /**
      * Create the actions.
