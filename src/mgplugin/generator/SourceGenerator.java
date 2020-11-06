@@ -13,6 +13,7 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,6 @@ import mgplugin.generator.entity.XmlTagElement;
  */
 public class SourceGenerator {
     
-    /*
     public static void main(String[] args) throws Exception {
         Activator.initThisPlugin("C:\\eclipse_rcp\\runtime-EclipseApplication\\.metadata\\mgplugin");
         // XML -> Interface
@@ -94,7 +94,7 @@ public class SourceGenerator {
         }
         
         Activator.closeThisPlugin();
-    }*/
+    }
 
     
     // MYBATIS 태그정보
@@ -119,6 +119,8 @@ public class SourceGenerator {
         XmlTagElement   xmlTagElement = new XmlTagElement();
         XMLInputFactory factory       = XMLInputFactory.newInstance();
         
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        
         // XML 파일명
         try (FileReader reader = new FileReader(filePath)) {
             
@@ -127,6 +129,7 @@ public class SourceGenerator {
             String resultType    = "";
             String parameterType = "";
             String queryId       = "";
+            
             while (streamReader.hasNext()) {
                 int nextEventType = streamReader.next();  // streamReader.getEventType()
                 
@@ -187,6 +190,8 @@ public class SourceGenerator {
         Map<String, List<String>> queryMapList  = new HashMap<>();
         List<String>              queryTextList = null;
         
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        
         try (FileReader reader = new FileReader(filePath)) {
             
             XMLStreamReader streamReader = factory.createXMLStreamReader(reader);
@@ -234,7 +239,8 @@ public class SourceGenerator {
                         
                         inFieldList = getInputFields (query);
                         
-                        if ( SELECT.equals(streamReader.getName().toString()) ) {
+                        //if ( SELECT.equals(streamReader.getName().toString()) ) {
+                        if ( ! StringUtils.defaultString( resultType).isEmpty() ) {
                             otFieldList = getOutputFields(query, queryId);
                         }
                         
@@ -375,48 +381,12 @@ public class SourceGenerator {
     /**
      * XML QUERY -> VO
      */
-    public static Pattern PATTERN_LINE_COMMENT = Pattern.compile("--.*");
-    
-    public static Pattern PATTERN_SELECT_UNION = Pattern.compile("UNION.*?SELECT"     , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PATTERN_SELECT       = Pattern.compile("SELECT(.*?)(FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PATTERN_COLUMN       = Pattern.compile("(\\w+)(\\s*)(,|$)"  , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    public static Pattern PATTERN_BIND_COLUMN  = Pattern.compile("(\\$|#)\\{(\\w+).*?\\}");
-    
-    public static void main(String[] args) throws Exception {
-        
-        StringBuilder sbQuery = new StringBuilder();
-        sbQuery.append("\n").append("SELECT");
-        sbQuery.append("\n").append("  COMM_CD_ID AS VL");
-        sbQuery.append("\n").append(" FROM TBL" );
-        sbQuery.append("\n").append(" UNION ALL " );
-        sbQuery.append("\n").append("SELECT");
-        sbQuery.append("\n").append("  COMM_CD_ID AS VL");
-        sbQuery.append("\n").append(" FROM TBL" );
-        
-        
-        sbQuery.append("\n").append("SELECT");
-        sbQuery.append("\n").append("  COMM_CD_ID         AS commCdId");
-        sbQuery.append("\n").append(", COMM_CD            AS commCd  ");
-        sbQuery.append("\n").append(", PROC_SN            AS procSn  ");
-        sbQuery.append("\n").append(" FROM TBL" );
-        
-        sbQuery.append("\n").append(" UNION ALL " );
-        sbQuery.append("\n").append("SELECT");
-        sbQuery.append("\n").append("  COMM_CD_ID");
-        sbQuery.append("\n").append(", COMM_CD   ");
-        sbQuery.append("\n").append(", PROC_SN   ");
-        sbQuery.append("\n").append(" FROM TBL" );
-        
-        sbQuery.append("\n").append(" UNION  " );
-        sbQuery.append("\n").append("SELECT");
-        sbQuery.append("\n").append("  COMM_CD_ID");
-        sbQuery.append("\n").append(", COMM_CD   ");
-        sbQuery.append("\n").append(", PROC_SN   ");
-        sbQuery.append("\n").append(" FROM TBL" );
-        
-        List<String> temp = SourceGenerator.getOutputFields(sbQuery.toString(), "");
-        System.out.println(temp);
-    }
+    public static Pattern PATTERN_LINE_COMMENT     = Pattern.compile("--.*");
+    public static Pattern PATTERN_SINGLE_QUOTATION = Pattern.compile("'.*?'"                         , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_SELECT_UNION     = Pattern.compile("UNION.*?SELECT"                , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_SELECT           = Pattern.compile("SELECT(.*?)(FROM|UNION_FROM|$)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_COLUMN           = Pattern.compile("(\\w+)(\\s*)(,|$)"             , Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    public static Pattern PATTERN_BIND_COLUMN      = Pattern.compile("(\\$|#)\\{(\\w+).*?\\}");
     
     /**
      * 파라미터
@@ -438,9 +408,6 @@ public class SourceGenerator {
     }
     
     public static List<String> getOutputFields(String query, String queryId) {
-        
-        // 라인주석제거
-        query = PATTERN_LINE_COMMENT.matcher(query).replaceAll("");
         
         // 블럭주석 & 괄호 제거
         Stack<Integer> stkMultiComment   = new Stack<Integer>();
@@ -470,6 +437,13 @@ public class SourceGenerator {
             Activator.console("주석 /* ... */ 시작, 종료가 맞지 않습니다. - " + queryId);
         }
         
+        // 라인주석 제거
+        query = PATTERN_LINE_COMMENT.matcher(String.valueOf(arrQuery)).replaceAll("");
+        
+        // 싱글쿼테이션 내용 제거
+        query = PATTERN_SINGLE_QUOTATION.matcher(String.valueOf(arrQuery)).replaceAll("");
+        
+        arrQuery = query.toCharArray();
         
         try {
             for (int idx = 0; idx < arrQuery.length; idx++) {
@@ -488,7 +462,7 @@ public class SourceGenerator {
             }
             
             if ( ! stkBracketComment.isEmpty() ) {
-                Activator.console("주석 /* ... */ 시작, 종료가 맞지 않습니다. - " + queryId);
+                Activator.console("괄호 ( ... ) 시작, 종료가 맞지 않습니다. - " + queryId);
             }
         } catch ( ArrayIndexOutOfBoundsException | EmptyStackException e) {
             Activator.console("괄호 ( ... ) 시작, 종료가 맞지 않습니다. - " + queryId);
@@ -518,7 +492,7 @@ public class SourceGenerator {
          * 
          * SELECT ... FROM TBL1
          */
-        query = PATTERN_SELECT_UNION.matcher(query).replaceAll("");
+        query = PATTERN_SELECT_UNION.matcher(query).replaceAll("UNION_FROM");
         
         /**
          * SELECT ... FROM DUAL <- 첫번째 SELECT
@@ -537,7 +511,7 @@ public class SourceGenerator {
             while (columnMatcher.find()) {
                 String column = columnMatcher.group(1);
                 if (columnList.contains(column)) {
-                    Activator.console("SELECT [" + column + "] 중복컬럼이 존재합니다." + queryId);
+                    Activator.console("SELECT [" + column + "] 중복컬럼이 존재합니다. 동적쿼리 사용시 무시 - " + queryId);
                 }
                 columnList.add(column);
             }
@@ -558,6 +532,8 @@ public class SourceGenerator {
         XMLInputFactory      factory            = XMLInputFactory.newInstance();
         SourceTemplate       sourceTemplate     = new SourceTemplate();
         List<MethodTemplate> methodTemplateList = new ArrayList<>();
+        
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
         
         try ( FileInputStream fileStream = new FileInputStream( filePath )  ){
             XMLStreamReader streamReader = null;
@@ -710,6 +686,7 @@ public class SourceGenerator {
         queryWordList.add("     , A.WORD_LOGIC_NAME                     ");
         queryWordList.add("  FROM METADB.DBO.WORD_DIC A WITH(NOLOCK)    ");
         queryWordList.add(" WHERE A.WORD_PHYCS_NAME = ':WORD_PHYCS_NAME'");  // 바인딩
+        
         
         for (String column : columnList) {
             

@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.PlatformUI;
 import org.insightech.er.ERDiagramActivator;
@@ -51,7 +51,8 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
         
         @Override
         public void execute(Event event) throws Exception {
-            
+            /*
+            org.eclipse.jface.dialogs.MessageDialog
             MessageDialog dialog = new MessageDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
                     , "대상확인", null
                     , "DDL 대상 DB를 선택하세요.", MessageDialog.INFORMATION
@@ -62,6 +63,15 @@ public class ExportTableDDLActionFactory implements IERDiagramActionFactory {
             if ( databaseType == 2 ) {
                 return;
             }
+            */
+            
+            ExportDialog dialog = new ExportDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
+            int resultCode = dialog.open();
+            if (resultCode == Window.CANCEL) {
+                return;
+            }
+            
+            String databaseType = dialog.getDbValue();
             
             Activator.getDefault().getConsole(Activator.MG_PLUGIN_CONSOLE).clearConsole();
             

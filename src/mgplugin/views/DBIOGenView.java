@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,11 +32,13 @@ import org.eclipse.wb.swt.ResourceManager;
 import mgplugin.Activator;
 import mgplugin.generator.SourceGenerator;
 import mgplugin.generator.entity.SourceTemplate;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 
 /**
  * <pre>
- * @programName : 프로그램명
- * @description : 프로그램_처리내용
+ * @programName : DBIOGenView
+ * @description : 프레임워크 SQL & VO 생성 뷰어
  * @history
  * ----------   ---------------   ------------------------------------------------------------------
  * 수정일       수정자            수정내용
@@ -54,7 +57,7 @@ public class DBIOGenView extends ViewPart {
     
     public DBIOGenView() {
     }
-
+    
     /**
      * Create contents of the view part.
      * @param parent
@@ -76,10 +79,7 @@ public class DBIOGenView extends ViewPart {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 
-                if ( Activator.getConnection() == null) {
-                    MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
-                    return;
-                }
+                if ( connectionDb(parent) == false ) return;
                 
                 // 테이블 목록
                 String value = textDBIO.getText().trim();
@@ -200,6 +200,12 @@ public class DBIOGenView extends ViewPart {
         btnCreateDBIO.setText("기본 DBIO파일생성");
         
         lblConnStatus = new Label(parent, SWT.NONE);
+        lblConnStatus.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDoubleClick(MouseEvent e) {
+                if ( connectionDb(parent) == false ) return;
+            }
+        });
         fd_textDBIO.top = new FormAttachment(lblConnStatus, 6);
         FormData fd_lblConnStatus = new FormData();
         lblConnStatus.setLayoutData(fd_lblConnStatus);
@@ -271,10 +277,7 @@ public class DBIOGenView extends ViewPart {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 
-                if ( Activator.getConnection() == null) {
-                    MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
-                    return;
-                }
+                if ( connectionDb(parent) == false ) return;
                 
                 // 테이블 목록
                 String value = textDBIO.getText().trim();
@@ -300,10 +303,8 @@ public class DBIOGenView extends ViewPart {
         btnVo.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                if ( Activator.getConnection() == null) {
-                    MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
-                    return;
-                }
+                
+                if ( connectionDb(parent) == false ) return;
                 
                 // 테이블 목록
                 String value = textDBIO.getText().trim();
@@ -358,14 +359,28 @@ public class DBIOGenView extends ViewPart {
      * Create the actions.
      */
     private void createActions() {
-        
-        if ( Activator.getConnection()== null) {
-            lblConnStatus.setText("DB 접속실패");
+        if ( Activator.getConnection() == null) {
+            lblConnStatus.setText("DB 접속실패, 재 접속 하려면 더블클릭하세요.                                                 ");
         } else {
             lblConnStatus.setText("DB " + Activator.getConnection().toString());
         }
     }
-
+    
+    /**
+     * Create the actions.
+     */
+    private boolean connectionDb(Composite parent) {
+        Connection dbConn = Activator.getConnection();
+        if ( dbConn == null) {
+            MessageDialog.openWarning(parent.getShell(), "확인", "DB 연결정보가 없습니다.");
+            lblConnStatus.setText("DB 접속실패, 재 접속 하려면 더블클릭하세요.                                                 ");
+            return false;
+        } else {
+            lblConnStatus.setText("DB " + dbConn.toString());
+        }
+        return true;
+    }    
+    
     /**
      * Initialize the toolbar.
      */

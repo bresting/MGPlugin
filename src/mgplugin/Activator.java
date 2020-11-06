@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -41,7 +42,7 @@ public class Activator extends AbstractUIPlugin {
     private static       Configuration TEMPLAT_CONFIG    = null;
     private static       Connection    CONNECTION        = null;
     
-    public static final String VERSION = "VER.2020.06.10_1000";
+    public static final String VERSION = "VER.2020.10.23_1330";
     
     /* ============================================================================================================== */
     // https://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F
@@ -113,7 +114,6 @@ public class Activator extends AbstractUIPlugin {
     
     public static Connection getConnection() {
         try {
-            
             if ( CONNECTION == null || CONNECTION.isClosed() ) {
                 console("Connection db...");
                 CONNECTION = DriverManager.getConnection(Activator.getProperty("db.connection"));
@@ -126,14 +126,11 @@ public class Activator extends AbstractUIPlugin {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
-            console("접속정보 리셋, 재접속" + e.toString());
-            try {
-                CONNECTION = DriverManager.getConnection(Activator.getProperty("db.connection"));
-            } catch (SQLException e1) {
-                console(e1);
-                e1.printStackTrace();
-            }
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            console("DB연결 정보가 없습니다.");
+            console(sw.toString());
+            CONNECTION = null;
         }
         return CONNECTION;
     }
